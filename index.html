@@ -82,7 +82,8 @@ nav button:hover:not(.on){color:var(--mid)}
 .live-bar{width:4px;align-self:stretch;border-radius:2px;flex-shrink:0}
 .live-info{flex:1;padding:0 12px;min-width:0}.live-name{font-size:16px;font-weight:800}.live-team{font-size:13px;font-weight:600;margin-top:1px}
 .live-gap{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:var(--dim);min-width:80px;text-align:right;flex-shrink:0}
-.live-tire{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;font-family:'Sora',sans-serif;flex-shrink:0;margin-left:8px;line-height:1;text-align:center;flex-direction:column;gap:0;color:#fff;position:relative}.live-tire::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(#1a1a1a 0deg,#1a1a1a 15deg,var(--tire-color,#555) 15deg,var(--tire-color,#555) 165deg,#1a1a1a 165deg,#1a1a1a 195deg,var(--tire-color,#555) 195deg,var(--tire-color,#555) 345deg,#1a1a1a 345deg,#1a1a1a 360deg)}.live-tire::after{content:'';position:absolute;inset:4px;border-radius:50%;background:#1a1a1a}.live-tire span,.live-tire *{position:relative;z-index:2}.tire-S{--tire-color:#E8002D}.tire-M{--tire-color:#FFD700}.tire-H{--tire-color:#ccc}.tire-I{--tire-color:#39B54A}.tire-W{--tire-color:#0093CC}.live-tire[style*="width:20px"]::after{inset:3px}
+.live-tire{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;font-family:'Sora',sans-serif;flex-shrink:0;margin-left:8px;line-height:1;text-align:center;flex-direction:column;gap:0;color:#fff;position:relative}.live-tire::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(#1a1a1a 0deg,#1a1a1a 15deg,var(--tire-color,#555) 15deg,var(--tire-color,#555) 165deg,#1a1a1a 165deg,#1a1a1a 195deg,var(--tire-color,#555) 195deg,var(--tire-color,#555) 345deg,#1a1a1a 345deg,#1a1a1a 360deg)}.live-tire::after{content:'';position:absolute;inset:4px;border-radius:50%;background:#1a1a1a}.live-tire span,.live-tire *{position:relative;z-index:2}
+.tire-S{--tire-color:#E8002D}.tire-M{--tire-color:#FFD700}.tire-H{--tire-color:#ccc}.tire-I{--tire-color:#39B54A}.tire-W{--tire-color:#0093CC}.live-tire[style*="width:20px"]::after{inset:3px}
 .fastest-lap{color:#A020F0 !important}
 .live-grid{display:grid;grid-template-columns:1fr;gap:10px}
 @media(min-width:900px){.live-grid{grid-template-columns:1fr 1fr;align-items:stretch}}
@@ -1690,7 +1691,7 @@ function demoFetchLiveData(){
     h+=`<div class="live-bar" style="background:#${d.team_colour}"></div>`;
     h+=`<div class="live-info"><div class="live-name${isFastest?' fastest-lap':''}">${d.full_name}${isDNF?' <span style="color:#E8002D;font-size:10px;font-weight:700;letter-spacing:0.5px">DNF</span> <span style="color:var(--dim);font-size:10px">'+DEMO_DNF[dn].reason+'</span>':''}${isDSQ?' <span style="color:#E8002D;font-size:10px;font-weight:700;letter-spacing:0.5px">DSQ</span>':''}${underInv&&!isDNF&&!isDSQ?'<span class="investigation-badge"> ⚠</span>':''}${pen&&!isDNF&&!isDSQ?'<span class="penalty-badge"> +'+pen.seconds+'s</span>':''}</div><div class="live-team" style="color:#${d.team_colour}">${d.team_name}${!isDNF&&!isDSQ?' · '+lapTime:isDNF?' · K'+DEMO_DNF[dn].lap:''}</div></div>`;
     if(!isDNF&&!isDSQ){
-      h+=`<div class="live-tire ${tireClass}"><span style="font-size:11px;line-height:1">${tire}</span><span style="font-size:8px;color:${tire==='M'?'rgba(0,0,0,0.5)':tire==='H'?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.6)'};font-weight:500;line-height:1">${tireAge}</span></div>`;
+      h+=`<div class="live-tire ${tireClass}"><span style="font-size:11px;line-height:1">${tire}</span><span style="font-size:8px;color:rgba(255,255,255,0.5);font-weight:500;line-height:1">${tireAge}</span></div>`;
     } else {
       h+=`<div style="width:32px"></div>`;
     }
@@ -2576,7 +2577,7 @@ async function fetchLiveData(){
     h+=`<div class="live-bar" style="background:${color}"></div>`;
     h+=`<div class="live-info"><div class="live-name${isFastest?' fastest-lap':''}">${name}</div><div class="live-team" style="color:${color}">${team}${lapTime?' · '+lapTime:''}</div></div>`;
     if(tireClass){
-      h+=`<div class="live-tire ${tireClass}"><span style="font-size:11px;line-height:1">${tire?tire.charAt(0):'?'}</span>${tireAge!=null?`<span style="font-size:8px;color:${tire?.charAt(0)==='M'?'rgba(0,0,0,0.5)':tire?.charAt(0)==='H'?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.6)'};font-weight:500;line-height:1">${tireAge}</span>`:''}    </div>`;
+      h+=`<div class="live-tire ${tireClass}"><span style="font-size:11px;line-height:1">${tire?tire.charAt(0):'?'}</span>${tireAge!=null?`<span style="font-size:8px;color:rgba(255,255,255,0.5);font-weight:500;line-height:1">${tireAge}</span>`:''}    </div>`;
     }
     h+=`<div class="live-gap" style="min-width:100px;text-align:right;font-variant-numeric:tabular-nums">${gapText}</div>`;
     h+=`</div>`;
