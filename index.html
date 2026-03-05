@@ -94,7 +94,7 @@ nav button:hover:not(.on){color:var(--mid)}
 .fastest-lap{color:#A020F0 !important}
 .live-grid{display:grid;grid-template-columns:1fr;gap:10px;height:calc(100vh - 16px);overflow:hidden}
 @media(min-width:900px){.live-grid{grid-template-columns:1fr 1fr;align-items:stretch}}
-@media(min-width:1200px){.live-grid{grid-template-columns:1.2fr 1fr 0.8fr;align-items:stretch}}
+@media(min-width:1200px){.live-grid{grid-template-columns:1.2fr 1fr 1fr;align-items:stretch}}
 .live-col{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden}
 .live-col>.card{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
 .live-col>.card>.lv-scroll{flex:1;min-height:0;overflow-y:auto}
@@ -105,7 +105,6 @@ nav button:hover:not(.on){color:var(--mid)}
 .rotate-dots>span{width:6px;height:6px;border-radius:50%;background:var(--dim);opacity:0.3;cursor:pointer;transition:all 0.3s}
 .rotate-dots>span.dot-active{opacity:1;background:var(--red);width:16px;border-radius:3px}
 .rotate-label{font-size:9px;color:var(--dim);text-align:center;letter-spacing:1px;padding-bottom:2px}
-.live-col{display:flex;flex-direction:column;gap:10px}
 .lv-scroll{overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 @keyframes yellowGlow{
   0%,100%{background-color:rgba(255,200,0,0.0);box-shadow:none}
@@ -1451,53 +1450,55 @@ let demoLap=1;
 // Demo data — 5 kol, DNF + DSQ showcase
 const DEMO_LAPS=7;
 const DEMO_DRIVERS={
-  1:{driver_number:1,name_acronym:'VER',full_name:'Max Verstappen',team_name:'Red Bull Racing',team_colour:'3671C6'},
-  4:{driver_number:4,name_acronym:'NOR',full_name:'Lando Norris',team_name:'McLaren',team_colour:'FF8000'},
+  1:{driver_number:1,name_acronym:'NOR',full_name:'Lando Norris',team_name:'McLaren',team_colour:'FF8000'},
   81:{driver_number:81,name_acronym:'PIA',full_name:'Oscar Piastri',team_name:'McLaren',team_colour:'FF8000'},
-  16:{driver_number:16,name_acronym:'LEC',full_name:'Charles Leclerc',team_name:'Ferrari',team_colour:'E8002D'},
   63:{driver_number:63,name_acronym:'RUS',full_name:'George Russell',team_name:'Mercedes',team_colour:'27F4D2'},
+  12:{driver_number:12,name_acronym:'ANT',full_name:'Kimi Antonelli',team_name:'Mercedes',team_colour:'27F4D2'},
+  3:{driver_number:3,name_acronym:'VER',full_name:'Max Verstappen',team_name:'Red Bull Racing',team_colour:'3671C6'},
+  6:{driver_number:6,name_acronym:'HAD',full_name:'Isack Hadjar',team_name:'Red Bull Racing',team_colour:'3671C6'},
+  16:{driver_number:16,name_acronym:'LEC',full_name:'Charles Leclerc',team_name:'Ferrari',team_colour:'E8002D'},
+  44:{driver_number:44,name_acronym:'HAM',full_name:'Lewis Hamilton',team_name:'Ferrari',team_colour:'E8002D'},
+  23:{driver_number:23,name_acronym:'ALB',full_name:'Alexander Albon',team_name:'Williams',team_colour:'64C4FF'},
+  55:{driver_number:55,name_acronym:'SAI',full_name:'Carlos Sainz',team_name:'Williams',team_colour:'64C4FF'},
+  41:{driver_number:41,name_acronym:'LIN',full_name:'Arvid Lindblad',team_name:'Racing Bulls',team_colour:'6692FF'},
+  30:{driver_number:30,name_acronym:'LAW',full_name:'Liam Lawson',team_name:'Racing Bulls',team_colour:'6692FF'},
+  18:{driver_number:18,name_acronym:'STR',full_name:'Lance Stroll',team_name:'Aston Martin',team_colour:'229971'},
   14:{driver_number:14,name_acronym:'ALO',full_name:'Fernando Alonso',team_name:'Aston Martin',team_colour:'229971'},
   31:{driver_number:31,name_acronym:'OCO',full_name:'Esteban Ocon',team_name:'Haas',team_colour:'B6BABD'},
-  44:{driver_number:44,name_acronym:'HAM',full_name:'Lewis Hamilton',team_name:'Ferrari',team_colour:'E8002D'},
-  27:{driver_number:27,name_acronym:'HUL',full_name:'Nico Hülkenberg',team_name:'Kick Sauber',team_colour:'52E252'},
-  18:{driver_number:18,name_acronym:'STR',full_name:'Lance Stroll',team_name:'Aston Martin',team_colour:'229971'},
-  5:{driver_number:5,name_acronym:'BOR',full_name:'Gabriel Bortoleto',team_name:'Kick Sauber',team_colour:'52E252'},
   87:{driver_number:87,name_acronym:'BEA',full_name:'Oliver Bearman',team_name:'Haas',team_colour:'B6BABD'},
-  55:{driver_number:55,name_acronym:'SAI',full_name:'Carlos Sainz',team_name:'Williams',team_colour:'64C4FF'},
-  22:{driver_number:22,name_acronym:'TSU',full_name:'Yuki Tsunoda',team_name:'Racing Bulls',team_colour:'6692FF'},
-  12:{driver_number:12,name_acronym:'ANT',full_name:'Kimi Antonelli',team_name:'Mercedes',team_colour:'27F4D2'},
-  23:{driver_number:23,name_acronym:'ALB',full_name:'Alexander Albon',team_name:'Williams',team_colour:'64C4FF'},
-  20:{driver_number:20,name_acronym:'HAD',full_name:'Isack Hadjar',team_name:'Racing Bulls',team_colour:'6692FF'},
-  30:{driver_number:30,name_acronym:'LAW',full_name:'Liam Lawson',team_name:'Racing Bulls',team_colour:'6692FF'},
+  27:{driver_number:27,name_acronym:'HUL',full_name:'Nico Hülkenberg',team_name:'Audi',team_colour:'E4002B'},
+  5:{driver_number:5,name_acronym:'BOR',full_name:'Gabriel Bortoleto',team_name:'Audi',team_colour:'E4002B'},
   10:{driver_number:10,name_acronym:'GAS',full_name:'Pierre Gasly',team_name:'Alpine',team_colour:'0093CC'},
-  43:{driver_number:43,name_acronym:'COL',full_name:'Franco Colapinto',team_name:'Alpine',team_colour:'0093CC'}
+  43:{driver_number:43,name_acronym:'COL',full_name:'Franco Colapinto',team_name:'Alpine',team_colour:'0093CC'},
+  11:{driver_number:11,name_acronym:'PER',full_name:'Sergio Pérez',team_name:'Cadillac',team_colour:'96989B'},
+  77:{driver_number:77,name_acronym:'BOT',full_name:'Valtteri Bottas',team_name:'Cadillac',team_colour:'96989B'}
 };
 
-const DEMO_ORDER=[1,81,4,16,63,14,31,44,27,18,5,87,55,22,12,23,20,30,10,43];
-const DEMO_START_TIRES={1:'S',81:'S',4:'S',16:'S',63:'M',14:'M',31:'M',44:'M',27:'M',18:'M',5:'M',87:'M',55:'H',22:'H',12:'M',23:'M',20:'M',30:'M',10:'M',43:'H'};
-const DEMO_START_AGE={1:2,81:2,4:2,16:2,63:0,14:0,31:0,44:0,27:0,18:0,5:0,87:0,55:0,22:0,12:0,23:0,20:0,30:0,10:0,43:0};
+const DEMO_ORDER=[1,81,3,16,63,14,31,44,27,18,5,87,55,12,23,6,41,30,10,43,11,77];
+const DEMO_START_TIRES={1:'S',81:'S',3:'S',16:'S',63:'M',14:'M',31:'M',44:'M',27:'M',18:'M',5:'M',87:'M',55:'H',12:'M',23:'M',6:'M',41:'M',30:'M',10:'M',43:'H',11:'H',77:'H'};
+const DEMO_START_AGE={1:2,81:2,3:2,16:2,63:0,14:0,31:0,44:0,27:0,18:0,5:0,87:0,55:0,12:0,23:0,6:0,41:0,30:0,10:0,43:0,11:0,77:0};
 
 const DEMO_SWAPS={
   2:[[5,4],[4,5]],  // RUS passes LEC
-  4:[[3,2],[2,3]],  // NOR passes PIA
+  4:[[3,2],[2,3]],  // VER passes PIA
 };
 
-const DEMO_PACE={1:88.2,81:88.6,4:88.45,16:89.1,63:88.9,14:90.8,31:91.2,44:91.5,27:90.5,18:91.0,5:91.8,87:91.6,55:92.0,22:91.4,12:92.2,23:92.8,20:93.0,30:93.2,10:93.8,43:94.5};
-const DEMO_LAPTIMES=[88.391,89.102,88.956,89.432,90.124,91.567,91.876,92.670,91.014,91.523,92.043,92.166,92.158,91.794,92.399,93.327,93.843,94.112,94.501,95.201];
+const DEMO_PACE={1:88.2,81:88.6,3:88.45,16:89.1,63:88.9,14:90.8,31:91.2,44:91.5,27:90.5,18:91.0,5:91.8,87:91.6,55:92.0,12:92.2,23:92.8,6:89.5,41:93.0,30:93.2,10:93.8,43:94.5,11:94.0,77:94.8};
+const DEMO_LAPTIMES=[88.391,89.102,88.956,89.432,90.124,91.567,91.876,92.670,91.014,91.523,92.043,92.166,92.158,92.399,93.327,89.876,93.843,94.112,94.501,95.201,94.321,95.102];
 
 // Pit stops: LAW serves 5s penalty in pit on lap 3
 const DEMO_PITS=[
   {lap:3,driver:30,dur:28.8,pit:7.4,from:'M',to:'H',penalty:5},
 ];
 
-// DNF: Stroll retires lap 3 (engine), Colapinto crash lap 4
-// DSQ: Tsunoda disqualified after race (technical infringement)
+// DNF: Stroll retires lap 3 (engine), Colapinto crash lap 5
+// DSQ: Bottas disqualified after race (technical infringement)
 const DEMO_DNF={
   18:{lap:3,reason:'Motor'},       // STR engine failure lap 3
   43:{lap:5,reason:'Náraz'},       // COL crash lap 5
 };
 const DEMO_DSQ={
-  22:{lap:7,reason:'Technická nesrovnalost — podlaha mimo regulace'}, // TSU DSQ after race
+  77:{lap:7,reason:'Technická nesrovnalost — podlaha mimo regulace'}, // BOT DSQ after race
 };
 
 const DEMO_RC=[
@@ -1514,9 +1515,9 @@ const DEMO_RC=[
   {lap:5,time:'14:12:20',flag:'',msg:'ODSTOUPENÍ — Vůz 43 (COL) — Náraz do bariéry',cat:'dnf'},
   {lap:6,time:'14:13:00',flag:'',msg:'SAFETY CAR NA TRATI',cat:'sc'},
   {lap:7,time:'14:15:00',flag:'GREEN',msg:'SAFETY CAR V BOXECH — RESTART',cat:'flag'},
-  {lap:7,time:'14:16:00',flag:'',msg:'NEJRYCHLEJŠÍ KOLO: VER 1:28.102',cat:'fastest'},
-  {lap:7,time:'14:17:30',flag:'CHEQUERED',msg:'ŠACHOVNICOVÁ VLAJKA — VERSTAPPEN VYHRÁVÁ',cat:'flag'},
-  {lap:7,time:'14:22:00',flag:'',msg:'DISKVALIFIKACE — Vůz 22 (TSU) — Technická nesrovnalost',cat:'dsq'},
+  {lap:7,time:'14:16:00',flag:'',msg:'NEJRYCHLEJŠÍ KOLO: NOR 1:28.102',cat:'fastest'},
+  {lap:7,time:'14:17:30',flag:'CHEQUERED',msg:'ŠACHOVNICOVÁ VLAJKA — NORRIS VYHRÁVÁ',cat:'flag'},
+  {lap:7,time:'14:22:00',flag:'',msg:'DISKVALIFIKACE — Vůz 77 (BOT) — Technická nesrovnalost',cat:'dsq'},
 ];
 
 const DEMO_FASTEST_RC={7:1};
@@ -1787,37 +1788,49 @@ function demoFetchLiveData(){
   // --- Panel 0: SEKTORY ---
   h+=`<div class="card alt ${window._rotIdx===0?'rot-active':''}"><div class="stitle">SEKTORY</div><div class="lv-scroll" style="flex:1;min-height:0">`;
   const sectorData=[];let bestS1=Infinity,bestS2=Infinity,bestS3=Infinity;
-  activeOrder.forEach((dn,i)=>{
+  const allDriversForPanels=[...activeOrder];
+  displayOrder.forEach(dn=>{if(!allDriversForPanels.includes(dn))allDriversForPanels.push(dn);});
+  allDriversForPanels.forEach((dn,i)=>{
+    const isDNF=DEMO_DNF[dn]&&DEMO_DNF[dn].lap<=demoLap;
+    const isDSQ=DEMO_DSQ[dn]&&DEMO_DSQ[dn].lap<=demoLap;
     const base=DEMO_LAPTIMES[Math.min(i,DEMO_LAPTIMES.length-1)];
     const s1=base*0.32+seededRand(demoLap*31+dn)*0.3-0.15;
     const s2=base*0.38+seededRand(demoLap*47+dn)*0.3-0.15;
     const s3=base*0.30+seededRand(demoLap*63+dn)*0.3-0.15;
-    if(s1<bestS1)bestS1=s1;if(s2<bestS2)bestS2=s2;if(s3<bestS3)bestS3=s3;
-    sectorData.push({dn,s1,s2,s3,total:s1+s2+s3});
+    if(!isDNF&&!isDSQ){if(s1<bestS1)bestS1=s1;if(s2<bestS2)bestS2=s2;if(s3<bestS3)bestS3=s3;}
+    sectorData.push({dn,s1,s2,s3,out:isDNF||isDSQ});
   });
   h+=`<div style="display:grid;grid-template-columns:20px 1fr repeat(3,1fr);gap:2px 5px;font-size:12px">`;
   h+=`<div></div><div></div><div style="color:var(--dim);font-size:10px;text-align:right">S1</div><div style="color:var(--dim);font-size:10px;text-align:right">S2</div><div style="color:var(--dim);font-size:10px;text-align:right">S3</div>`;
   sectorData.forEach((sd,idx)=>{
     const d=DEMO_DRIVERS[sd.dn]||{};
-    function sC(v,b){if(Math.abs(v-b)<0.02)return'#A020F0';if(v<b+0.3)return'#39B54A';return'#FFD700';}
-    h+=`<div style="font-weight:700;color:var(--dim)">${idx+1}</div>`;
-    h+=`<div style="font-weight:700;color:#${d.team_colour||'555'}">${d.name_acronym||'?'}</div>`;
-    h+=`<div style="text-align:right;font-weight:600;color:${sC(sd.s1,bestS1)};font-variant-numeric:tabular-nums">${sd.s1.toFixed(3)}</div>`;
-    h+=`<div style="text-align:right;font-weight:600;color:${sC(sd.s2,bestS2)};font-variant-numeric:tabular-nums">${sd.s2.toFixed(3)}</div>`;
-    h+=`<div style="text-align:right;font-weight:600;color:${sC(sd.s3,bestS3)};font-variant-numeric:tabular-nums">${sd.s3.toFixed(3)}</div>`;
+    const dim=sd.out?'opacity:0.3;':'';
+    function sC(v,b){if(sd.out)return'var(--dim)';if(Math.abs(v-b)<0.02)return'#A020F0';if(v<b+0.3)return'#39B54A';return'#FFD700';}
+    h+=`<div style="font-weight:700;color:var(--dim);${dim}">${idx+1}</div>`;
+    h+=`<div style="font-weight:700;color:#${d.team_colour||'555'};${dim}">${d.name_acronym||'?'}${sd.out?' <span style="font-size:9px;color:#E8002D">OUT</span>':''}</div>`;
+    h+=`<div style="text-align:right;font-weight:600;color:${sC(sd.s1,bestS1)};font-variant-numeric:tabular-nums;${dim}">${sd.out?'—':sd.s1.toFixed(3)}</div>`;
+    h+=`<div style="text-align:right;font-weight:600;color:${sC(sd.s2,bestS2)};font-variant-numeric:tabular-nums;${dim}">${sd.out?'—':sd.s2.toFixed(3)}</div>`;
+    h+=`<div style="text-align:right;font-weight:600;color:${sC(sd.s3,bestS3)};font-variant-numeric:tabular-nums;${dim}">${sd.out?'—':sd.s3.toFixed(3)}</div>`;
   });
   h+=`</div></div></div>`;
 
   // --- Panel 1: RYCHLOST ---
   h+=`<div class="card alt ${window._rotIdx===1?'rot-active':''}"><div class="stitle">RYCHLOST</div><div class="lv-scroll" style="flex:1;min-height:0">`;
   const speedData=[];
-  activeOrder.forEach((dn,i)=>{const d=DEMO_DRIVERS[dn]||{};const spd=340-i*0.8-seededRand(demoLap*99+dn)*5;speedData.push({dn,speed:Math.round(spd*10)/10,d});});
+  allDriversForPanels.forEach((dn,i)=>{
+    const d=DEMO_DRIVERS[dn]||{};
+    const isDNF=DEMO_DNF[dn]&&DEMO_DNF[dn].lap<=demoLap;
+    const isDSQ=DEMO_DSQ[dn]&&DEMO_DSQ[dn].lap<=demoLap;
+    const spd=340-i*0.8-seededRand(demoLap*99+dn)*5;
+    speedData.push({dn,speed:Math.round(spd*10)/10,d,out:isDNF||isDSQ});
+  });
   const topSpeed=[...speedData].sort((a,b)=>b.speed-a.speed);
   const maxSpd=topSpeed[0]?.speed||340;
   topSpeed.forEach((sd,idx)=>{
     const pct=((sd.speed/maxSpd)*100).toFixed(0);
-    h+=`<div class="speed-row"><div style="width:20px;font-weight:700;color:var(--dim);font-size:11px;text-align:right">${idx+1}</div>`;
-    h+=`<div style="width:34px;font-weight:700;color:#${sd.d.team_colour||'555'};font-size:11px">${sd.d.name_acronym||'?'}</div>`;
+    const dim=sd.out?'opacity:0.3;':'';
+    h+=`<div class="speed-row" style="${dim}"><div style="width:20px;font-weight:700;color:var(--dim);font-size:11px;text-align:right">${idx+1}</div>`;
+    h+=`<div style="width:34px;font-weight:700;color:#${sd.d.team_colour||'555'};font-size:11px">${sd.d.name_acronym||'?'}${sd.out?' <span style="font-size:8px;color:#E8002D">OUT</span>':''}</div>`;
     h+=`<div class="speed-bar"><div class="speed-fill" style="width:${pct}%;background:linear-gradient(90deg,#${sd.d.team_colour||'555'}88,#${sd.d.team_colour||'555'})"></div></div>`;
     h+=`<div style="font-weight:800;font-size:12px;min-width:52px;text-align:right;font-variant-numeric:tabular-nums">${sd.speed.toFixed(1)}<span style="font-size:9px;color:var(--dim);font-weight:400"> km/h</span></div></div>`;
   });
@@ -1865,13 +1878,18 @@ function demoFetchLiveData(){
 
   // --- Panel 4: BODY ---
   h+=`<div class="card alt ${window._rotIdx===4?'rot-active':''}"><div class="stitle">BODY</div><div class="lv-scroll" style="flex:1;min-height:0">`;
-  const racePoints=[25,18,15,12,10,8,6,4,2,1,0,0,0,0,0,0,0,0,0,0];
+  const racePoints=[25,18,15,12,10,8,6,4,2,1];
   h+=`<div style="display:grid;grid-template-columns:20px 1fr auto;gap:2px 6px;font-size:12px">`;
-  activeOrder.slice(0,10).forEach((dn,i)=>{
-    const d=DEMO_DRIVERS[dn]||{};let pts=racePoints[i];
-    h+=`<div style="font-weight:700;color:var(--dim)">${i+1}</div>`;
-    h+=`<div style="font-weight:600;color:#${d.team_colour||'555'}">${d.name_acronym||'?'}</div>`;
-    h+=`<div style="font-weight:800;text-align:right">${pts}<span style="font-size:10px;color:var(--dim);font-weight:400"> b.</span></div>`;
+  displayOrder.forEach((dn,i)=>{
+    const d=DEMO_DRIVERS[dn]||{};
+    const isDNF=DEMO_DNF[dn]&&DEMO_DNF[dn].lap<=demoLap;
+    const isDSQ=DEMO_DSQ[dn]&&DEMO_DSQ[dn].lap<=demoLap;
+    const pts=(!isDNF&&!isDSQ&&i<10)?racePoints[i]:0;
+    const dim=(isDNF||isDSQ)?'opacity:0.3;':'';
+    const noPoints=pts===0&&!isDNF&&!isDSQ;
+    h+=`<div style="font-weight:700;color:var(--dim);${dim}">${isDNF||isDSQ?'—':i+1}</div>`;
+    h+=`<div style="font-weight:600;color:#${d.team_colour||'555'};${dim}">${d.name_acronym||'?'}${isDNF?' <span style="font-size:9px;color:#E8002D">DNF</span>':''}${isDSQ?' <span style="font-size:9px;color:#E8002D">DSQ</span>':''}</div>`;
+    h+=`<div style="font-weight:800;text-align:right;${dim}${noPoints?'color:var(--dim);font-weight:400;':''}">${pts>0?pts:'+0'}<span style="font-size:10px;color:var(--dim);font-weight:400"> b.</span></div>`;
   });
   h+=`</div></div></div>`;
 
@@ -1880,11 +1898,21 @@ function demoFetchLiveData(){
   const trackTemp=42+seededRand(demoLap*7)*3;const airTemp=28+seededRand(demoLap*11)*2;
   const humidity=45+seededRand(demoLap*13)*10;const wind=8+seededRand(demoLap*17)*6;
   const pressure=1013+seededRand(demoLap*19)*4-2;
-  h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:12px">`;
-  [{a:'TRK',l:'Trať',v:trackTemp.toFixed(1)+'°',c:'#E8002D'},{a:'AIR',l:'Vzduch',v:airTemp.toFixed(1)+'°',c:'#FFD700'},{a:'HUM',l:'Vlhkost',v:humidity.toFixed(0)+'%',c:'#0093CC'},{a:'WND',l:'Vítr',v:wind.toFixed(1)+' km/h',c:'#39B54A'},{a:'BAR',l:'Tlak',v:pressure.toFixed(0)+' hPa',c:'#A020F0'},{a:'RAIN',l:'Déšť',v:'0%',c:'var(--dim)'}].forEach(w=>{
-    h+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--line)"><span style="font-weight:700;color:${w.c};font-size:10px;letter-spacing:0.5px">${w.a}</span><span style="font-weight:700;color:${w.c}">${w.v}</span></div>`;
+  const rainChance=Math.max(0,Math.min(100,Math.round(seededRand(demoLap*23)*15)));
+  h+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">`;
+  [{icon:'🌡',label:'TRAŤ',v:trackTemp.toFixed(1)+'°C',c:'#E8002D'},{icon:'🌤',label:'VZDUCH',v:airTemp.toFixed(1)+'°C',c:'#FFD700'},{icon:'💧',label:'VLHKOST',v:humidity.toFixed(0)+'%',c:'#0093CC'},{icon:'💨',label:'VÍTR',v:wind.toFixed(1)+' km/h',c:'#39B54A'},{icon:'📊',label:'TLAK',v:pressure.toFixed(0)+' hPa',c:'#A020F0'},{icon:'🌧',label:'DÉŠŤ',v:rainChance+'%',c:rainChance>30?'#0093CC':'var(--dim)'}].forEach(w=>{
+    h+=`<div style="background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:8px;padding:8px;text-align:center">`;
+    h+=`<div style="font-size:16px;margin-bottom:2px">${w.icon}</div>`;
+    h+=`<div style="font-size:9px;color:var(--dim);letter-spacing:1px;font-weight:600">${w.label}</div>`;
+    h+=`<div style="font-size:14px;font-weight:800;color:${w.c};margin-top:2px">${w.v}</div>`;
+    h+=`</div>`;
   });
-  h+=`</div></div></div>`;
+  h+=`</div>`;
+  // Windy rain radar embed - Yas Marina Circuit coordinates
+  h+=`<div style="flex:1;min-height:120px;border-radius:8px;overflow:hidden;border:1px solid var(--line)">`;
+  h+=`<iframe src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=km/h&zoom=10&overlay=rain&product=ecmwf&level=surface&lat=24.467&lon=54.603&detailLat=24.467&detailLon=54.603&marker=true&message=true" style="width:100%;height:100%;min-height:180px;border:0;filter:brightness(0.85)" loading="lazy"></iframe>`;
+  h+=`</div>`;
+  h+=`</div></div>`;
 
   h+=`</div>`; // END rotate-panel
   h+=`</div>`; // END COL 3
@@ -2688,7 +2716,7 @@ function startDemo(){
   // Hide the no-session placeholder
   const noSess=document.querySelector('.no-session');if(noSess)noSess.style.display='none';
   const banner=document.getElementById('homeLiveBanner');
-  const labels={fp:'DEMO: FP1 Bahrain GP',quali:'DEMO: Kvalifikace Bahrain GP',race:'DEMO: Abu Dhabi GP 2025'};
+  const labels={fp:'DEMO: FP1 Australia GP 2026',quali:'DEMO: Kvalifikace Australia GP 2026',race:'DEMO: Australia GP 2026'};
   if(banner){banner.style.display='block';document.getElementById('liveBannerText').textContent=labels[demoSessionType]||labels.race;}
   const dot=document.getElementById('liveDot');if(dot)dot.style.display='block';
   const btn=document.getElementById('liveBtn');if(btn)btn.style.color='#E8002D';
