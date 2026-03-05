@@ -8,12 +8,14 @@
 <style>
 :root{--red:#E8002D;--rg:rgba(232,0,45,0.22);--gold:#FFD700;--bg:#111520;--card:rgba(255,255,255,0.045);--brd:rgba(255,255,255,0.08);--dim:rgba(255,255,255,0.38);--mid:rgba(255,255,255,0.58)}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:#fff;font-family:'Sora',sans-serif;min-height:100vh;overflow-x:hidden;overflow-y:scroll}
+body{background:var(--bg);color:#fff;font-family:'Sora',sans-serif;min-height:100vh;overflow-x:hidden}
+body.live-mode{overflow:hidden}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 15% -5%,rgba(232,0,45,0.06) 0%,transparent 55%),radial-gradient(ellipse at 85% 105%,rgba(54,113,198,0.05) 0%,transparent 50%);pointer-events:none}
 
 .wrap{max-width:1060px;margin:0 auto;padding:16px 16px 80px;position:relative;z-index:1}
-#p-live .live-grid{width:calc(100vw - 32px);max-width:1600px;margin-left:50%;transform:translateX(-50%)}
-#p-live{padding-top:8px}
+#p-live .live-grid{width:calc(100vw - 16px);max-width:1600px;margin-left:50%;transform:translateX(-50%)}
+#p-live{padding:4px 0 0 0}
+body.live-mode .wrap{padding:0 8px;max-width:none}
 nav{display:flex;gap:3px;background:rgba(12,12,18,0.95);border-radius:0 0 14px 14px;padding:4px 8px;position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:100;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--brd);border-top:none;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;opacity:0;transition:opacity 0.3s,transform 0.3s;transform:translateX(-50%) translateY(-100%);pointer-events:none}
 .nav-zone{position:fixed;top:0;left:0;right:0;height:32px;z-index:99}
 .nav-zone:hover+nav,nav:hover{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
@@ -92,11 +94,11 @@ nav button:hover:not(.on){color:var(--mid)}
 .tire-S{--tire-color:#E8002D}.tire-M{--tire-color:#FFD700}.tire-H{--tire-color:#ccc}.tire-I{--tire-color:#39B54A}.tire-W{--tire-color:#0093CC}
 .live-tire[style*="width:20px"]::after{inset:3px}
 .fastest-lap{color:#A020F0 !important}
-.live-grid{display:grid;grid-template-columns:1fr;gap:10px;height:calc(100vh - 16px);overflow:hidden}
+.live-grid{display:grid;grid-template-columns:1fr;gap:8px;height:calc(100vh - 16px);overflow:hidden;box-sizing:border-box}
 @media(min-width:900px){.live-grid{grid-template-columns:1fr 1fr;align-items:stretch}}
 @media(min-width:1200px){.live-grid{grid-template-columns:1.2fr 1fr 1fr;align-items:stretch}}
-.live-col{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden;height:100%}
-.live-col>.card{min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.live-col{display:flex;flex-direction:column;gap:8px;min-height:0;overflow:hidden}
+.live-col>.card{min-height:0;overflow:hidden;display:flex;flex-direction:column;flex:1;padding:12px 14px;margin-bottom:0}
 .live-col>.card>.lv-scroll{flex:1;min-height:0;overflow-y:auto}
 .rotate-panel{position:relative;flex:1;min-height:0;overflow:hidden}
 .rotate-panel>.card{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity 0.5s;display:flex;flex-direction:column;overflow:hidden}
@@ -1396,7 +1398,9 @@ function go(id,btn){
   document.getElementById('p-'+id).classList.add('show');
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
-  window.scrollTo({top:0,behavior:'smooth'});
+  // Toggle body overflow for live page
+  if(id==='live'){document.body.classList.add('live-mode');}
+  else{document.body.classList.remove('live-mode');window.scrollTo({top:0,behavior:'smooth'});}
   if(id==='chart')drawChart();
 }
 
