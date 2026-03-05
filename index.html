@@ -13,7 +13,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 .wrap{max-width:1060px;margin:0 auto;padding:16px 16px 80px;position:relative;z-index:1}
 #p-live .live-grid{width:calc(100vw - 32px);max-width:1600px;margin-left:50%;transform:translateX(-50%)}
-nav{display:flex;gap:3px;background:rgba(12,12,18,0.88);border-radius:14px;padding:4px;margin-bottom:28px;position:sticky;top:8px;z-index:10;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--brd);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#p-live{padding-top:8px}
+nav{display:flex;gap:3px;background:rgba(12,12,18,0.95);border-radius:0 0 14px 14px;padding:4px 8px;position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:100;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--brd);border-top:none;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;opacity:0;transition:opacity 0.3s,transform 0.3s;transform:translateX(-50%) translateY(-100%);pointer-events:none}
+.nav-zone{position:fixed;top:0;left:0;right:0;height:32px;z-index:99}
+.nav-zone:hover+nav,nav:hover{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
 nav::-webkit-scrollbar{display:none}
 nav button{flex:0 0 auto;padding:12px 14px;background:none;border:1px solid transparent;border-radius:9px;color:var(--dim);font-size:12px;font-weight:700;letter-spacing:1.5px;cursor:pointer;transition:all .2s;font-family:'Sora',sans-serif;white-space:nowrap;text-align:center}
 nav button.on{background:rgba(232,0,45,0.2);border-color:rgba(232,0,45,0.35);color:#fff}
@@ -89,9 +92,19 @@ nav button:hover:not(.on){color:var(--mid)}
 .tire-S{--tire-color:#E8002D}.tire-M{--tire-color:#FFD700}.tire-H{--tire-color:#ccc}.tire-I{--tire-color:#39B54A}.tire-W{--tire-color:#0093CC}
 .live-tire[style*="width:20px"]::after{inset:3px}
 .fastest-lap{color:#A020F0 !important}
-.live-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.live-grid{display:grid;grid-template-columns:1fr;gap:10px;height:calc(100vh - 16px);overflow:hidden}
 @media(min-width:900px){.live-grid{grid-template-columns:1fr 1fr;align-items:stretch}}
-@media(min-width:1200px){.live-grid{grid-template-columns:1fr 1fr 0.8fr;align-items:stretch}}
+@media(min-width:1200px){.live-grid{grid-template-columns:1.2fr 1fr 0.8fr;align-items:stretch}}
+.live-col{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden}
+.live-col>.card{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.live-col>.card>.lv-scroll{flex:1;min-height:0;overflow-y:auto}
+.rotate-panel{position:relative;flex:1;min-height:0;overflow:hidden}
+.rotate-panel>.card{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity 0.5s;display:flex;flex-direction:column;overflow:hidden}
+.rotate-panel>.card.rot-active{opacity:1;pointer-events:auto}
+.rotate-dots{display:flex;gap:4px;justify-content:center;padding:6px 0;flex-shrink:0}
+.rotate-dots>span{width:6px;height:6px;border-radius:50%;background:var(--dim);opacity:0.3;cursor:pointer;transition:all 0.3s}
+.rotate-dots>span.dot-active{opacity:1;background:var(--red);width:16px;border-radius:3px}
+.rotate-label{font-size:9px;color:var(--dim);text-align:center;letter-spacing:1px;padding-bottom:2px}
 .live-col{display:flex;flex-direction:column;gap:10px}
 .lv-scroll{overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 @keyframes yellowGlow{
@@ -179,6 +192,7 @@ nav button:hover:not(.on){color:var(--mid)}
 </head>
 <body>
 <div class="wrap">
+<div class="nav-zone"></div>
 <nav>
 <button id="liveBtn" onclick="go('live',this)" style="position:relative">LIVE<span id="liveDot" style="display:none;position:absolute;top:4px;right:2px;width:7px;height:7px;background:#E8002D;border-radius:50%;animation:pulse 1.5s infinite;pointer-events:none"></span></button>
 <button class="on" onclick="go('home',this)">DOMŮ</button>
@@ -1703,52 +1717,13 @@ function demoFetchLiveData(){
   });
   h+=`</div></div>`;
 
-  // RACE CONTROL (scrollable)
-  h+=`<div class="card alt" style="margin-bottom:0"><div class="stitle" style="flex-shrink:0">RACE CONTROL (${rcVisible.length})</div><div class="lv-scroll" style="height:250px">`;
-  if(rcVisible.length){
-    rcVisible.slice().reverse().forEach(m=>{
-      let flagClass='';
-      if(m.flag==='YELLOW')flagClass='rc-yellow';else if(m.flag==='RED')flagClass='rc-red';
-      else if(m.flag==='GREEN')flagClass='rc-green';else if(m.flag==='CHEQUERED')flagClass='rc-chequered';
-      let msgClass='';
-      if(m.cat==='penalty')msgClass='rc-penalty';else if(m.cat==='investigation')msgClass='rc-investigation';
-      else if(m.cat==='vsc')msgClass='rc-vsc';else if(m.cat==='sc')msgClass='rc-sc';
-      else if(m.cat==='cleared')msgClass='rc-investigation';
-      let msgStyle='';if(m.cat==='fastest')msgStyle='color:#A020F0;font-weight:600;';
-      if(m.cat==='dnf')msgStyle='color:#E8002D;font-weight:600;';
-      if(m.cat==='dsq')msgStyle='color:#E8002D;font-weight:700;';
-      if(m.cat==='penalty_served')msgStyle='color:#FFA500;font-weight:600;font-style:italic;';
-      h+=`<div class="rc-msg ${msgClass}" style="${msgStyle}"><div class="rc-time">${m.time}</div>${flagClass?`<div class="rc-flag ${flagClass}"></div>`:''}<div class="rc-text">${m.msg}</div></div>`;
-    });
-  } else {
-    h+=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--dim);font-size:13px">Zatím žádné zprávy</div>`;
-  }
-  h+=`</div></div>`;
-  h+=`</div>`;
+  h+=`</div>`; // END COL 1
 
-  // ═══ COL 2 ═══
+  // ═══ COL 2: STRATEGIE + GAP ═══
   h+=`<div class="live-col">`;
 
-  // PIT STOPS (scrollable)
-  h+=`<div class="card alt" style="margin-bottom:0"><div class="stitle">PIT STOPY (${visiblePits.length})</div><div class="lv-scroll" style="height:200px">`;
-  if(visiblePits.length){
-    visiblePits.slice().reverse().forEach(p=>{
-      const d=DEMO_DRIVERS[p.driver]||{};
-      h+=`<div class="pit-row"><div class="pit-lap">L${p.lap}</div>`;
-      h+=`<div class="pit-driver" style="color:#${d.team_colour||'555'}">${d.name_acronym||'?'}</div>`;
-      h+=`<div style="display:flex;align-items:center;gap:4px">`;
-      h+=`<div class="live-tire tire-${p.from}" style="width:20px;height:20px;font-size:8px;margin-left:0"><span style="position:relative;z-index:2">${p.from}</span></div>`;
-      h+=`<span style="color:var(--dim);font-size:11px">→</span>`;
-      h+=`<div class="live-tire tire-${p.to}" style="width:20px;height:20px;font-size:8px;margin-left:0"><span style="position:relative;z-index:2">${p.to}</span></div></div>`;
-      h+=`<div class="pit-dur" style="text-align:right"><span style="font-weight:700">${p.pit?p.pit.toFixed(1)+'s':''}</span>${p.penalty?'<span style="font-size:10px;color:#FFA500;font-weight:700;margin-left:3px">+'+p.penalty+'s</span>':''}<span style="font-size:11px;color:var(--dim);margin-left:3px">${p.dur.toFixed(1)}s</span></div></div>`;
-    });
-  } else {
-    h+=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--dim);font-size:13px">Zatím žádné zastávky</div>`;
-  }
-  h+=`</div></div>`;
-
   // STRATEGIE (scrollable - all 20 drivers)
-  h+=`<div class="card alt" style="margin-bottom:0"><div class="stitle">STRATEGIE</div><div class="lv-scroll" style="max-height:300px">`;
+  h+=`<div class="card alt" style="margin-bottom:0;flex:1.2"><div class="stitle">STRATEGIE</div><div class="lv-scroll" style="flex:1;min-height:0">`;
   const tireColors={S:'#E8002D',M:'#FFD700',H:'#ffffff',I:'#39B54A',W:'#0093CC'};
   activeOrder.forEach(dn=>{
     const d=DEMO_DRIVERS[dn]||{};
@@ -1768,8 +1743,8 @@ function demoFetchLiveData(){
   [1,2,3,4,5,6,DEMO_LAPS].forEach(l=>h+=`<span>${l}</span>`);
   h+=`</div></div></div></div>`;
 
-  // GAP CHART (scrollable)
-  h+=`<div class="card alt" style="margin-bottom:0"><div class="stitle">GAP</div><div class="lv-scroll" style="max-height:250px">`;
+  // GAP CHART
+  h+=`<div class="card alt" style="margin-bottom:0;flex:0.8"><div class="stitle">GAP</div><div class="lv-scroll" style="flex:1;min-height:0">`;
   if(!window._demoGapHistory)window._demoGapHistory={};
   activeOrder.slice(1,11).forEach((dn,idx)=>{
     if(!window._demoGapHistory[dn])window._demoGapHistory[dn]=[];
@@ -1794,13 +1769,23 @@ function demoFetchLiveData(){
     h+=`<div style="font-size:10px;width:14px;text-align:center;color:${trend>0.3?'#E8002D':trend<-0.3?'#39B54A':'var(--dim)'}">${trend>0.3?'▲':trend<-0.3?'▼':'—'}</div></div>`;
   });
   h+=`</div></div>`;
-  h+=`</div>`;
+  h+=`</div>`; // END COL 2
 
-  // ═══ COL 3 ═══
+  // ═══ COL 3: ROTATING PANEL ═══
   h+=`<div class="live-col">`;
+  const rotPanels=['SEKTORY','RYCHLOST','PIT STOPY','RACE CONTROL','BODY','POČASÍ'];
+  if(!window._rotIdx)window._rotIdx=0;
+  if(!window._rotPaused)window._rotPaused=false;
+  h+=`<div class="rotate-dots" onmouseenter="window._rotPaused=true" onmouseleave="window._rotPaused=false">`;
+  rotPanels.forEach((name,i)=>{
+    h+=`<span class="${i===window._rotIdx?'dot-active':''}" onclick="window._rotIdx=${i};demoLap--;demoFetchLiveData()" title="${name}"></span>`;
+  });
+  h+=`</div>`;
+  h+=`<div class="rotate-label">${rotPanels[window._rotIdx]}</div>`;
+  h+=`<div class="rotate-panel" onmouseenter="window._rotPaused=true" onmouseleave="window._rotPaused=false">`;
 
-  // SEKTORY (scrollable - all drivers)
-  h+=`<div class="card alt" style="margin-bottom:0"><div class="stitle">SEKTORY</div><div class="lv-scroll" style="max-height:220px">`;
+  // --- Panel 0: SEKTORY ---
+  h+=`<div class="card alt ${window._rotIdx===0?'rot-active':''}"><div class="stitle">SEKTORY</div><div class="lv-scroll" style="flex:1;min-height:0">`;
   const sectorData=[];let bestS1=Infinity,bestS2=Infinity,bestS3=Infinity;
   activeOrder.forEach((dn,i)=>{
     const base=DEMO_LAPTIMES[Math.min(i,DEMO_LAPTIMES.length-1)];
@@ -1823,8 +1808,8 @@ function demoFetchLiveData(){
   });
   h+=`</div></div></div>`;
 
-  // RYCHLOST (scrollable - all drivers)
-  h+=`<div class="card alt" style="margin-bottom:0"><div class="stitle">RYCHLOST</div><div class="lv-scroll" style="max-height:200px">`;
+  // --- Panel 1: RYCHLOST ---
+  h+=`<div class="card alt ${window._rotIdx===1?'rot-active':''}"><div class="stitle">RYCHLOST</div><div class="lv-scroll" style="flex:1;min-height:0">`;
   const speedData=[];
   activeOrder.forEach((dn,i)=>{const d=DEMO_DRIVERS[dn]||{};const spd=340-i*0.8-seededRand(demoLap*99+dn)*5;speedData.push({dn,speed:Math.round(spd*10)/10,d});});
   const topSpeed=[...speedData].sort((a,b)=>b.speed-a.speed);
@@ -1838,8 +1823,48 @@ function demoFetchLiveData(){
   });
   h+=`</div></div>`;
 
-  // BODY
-  h+=`<div class="card alt" style="margin-bottom:0"><div class="stitle">BODY</div>`;
+  // --- Panel 2: PIT STOPY ---
+  h+=`<div class="card alt ${window._rotIdx===2?'rot-active':''}"><div class="stitle">PIT STOPY (${visiblePits.length})</div><div class="lv-scroll" style="flex:1;min-height:0">`;
+  if(visiblePits.length){
+    visiblePits.slice().reverse().forEach(p=>{
+      const d=DEMO_DRIVERS[p.driver]||{};
+      h+=`<div class="pit-row"><div class="pit-lap">L${p.lap}</div>`;
+      h+=`<div class="pit-driver" style="color:#${d.team_colour||'555'}">${d.name_acronym||'?'}</div>`;
+      h+=`<div style="display:flex;align-items:center;gap:4px">`;
+      h+=`<div class="live-tire tire-${p.from}" style="width:20px;height:20px;font-size:8px;margin-left:0"><span style="position:relative;z-index:2">${p.from}</span></div>`;
+      h+=`<span style="color:var(--dim);font-size:11px">→</span>`;
+      h+=`<div class="live-tire tire-${p.to}" style="width:20px;height:20px;font-size:8px;margin-left:0"><span style="position:relative;z-index:2">${p.to}</span></div></div>`;
+      h+=`<div class="pit-dur" style="text-align:right"><span style="font-weight:700">${p.pit?p.pit.toFixed(1)+'s':''}</span>${p.penalty?'<span style="font-size:10px;color:#FFA500;font-weight:700;margin-left:3px">+'+p.penalty+'s</span>':''}<span style="font-size:11px;color:var(--dim);margin-left:3px">${p.dur.toFixed(1)}s</span></div></div>`;
+    });
+  } else {
+    h+=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--dim);font-size:13px">Zatím žádné zastávky</div>`;
+  }
+  h+=`</div></div>`;
+
+  // --- Panel 3: RACE CONTROL ---
+  h+=`<div class="card alt ${window._rotIdx===3?'rot-active':''}"><div class="stitle">RACE CONTROL (${rcVisible.length})</div><div class="lv-scroll" style="flex:1;min-height:0">`;
+  if(rcVisible.length){
+    rcVisible.slice().reverse().forEach(m=>{
+      let flagClass='';
+      if(m.flag==='YELLOW')flagClass='rc-yellow';else if(m.flag==='RED')flagClass='rc-red';
+      else if(m.flag==='GREEN')flagClass='rc-green';else if(m.flag==='CHEQUERED')flagClass='rc-chequered';
+      let msgClass='';
+      if(m.cat==='penalty')msgClass='rc-penalty';else if(m.cat==='investigation')msgClass='rc-investigation';
+      else if(m.cat==='vsc')msgClass='rc-vsc';else if(m.cat==='sc')msgClass='rc-sc';
+      else if(m.cat==='cleared')msgClass='rc-investigation';
+      let msgStyle='';if(m.cat==='fastest')msgStyle='color:#A020F0;font-weight:600;';
+      if(m.cat==='dnf')msgStyle='color:#E8002D;font-weight:600;';
+      if(m.cat==='dsq')msgStyle='color:#E8002D;font-weight:700;';
+      if(m.cat==='penalty_served')msgStyle='color:#FFA500;font-weight:600;font-style:italic;';
+      h+=`<div class="rc-msg ${msgClass}" style="${msgStyle}"><div class="rc-time">${m.time}</div>${flagClass?`<div class="rc-flag ${flagClass}"></div>`:''}<div class="rc-text">${m.msg}</div></div>`;
+    });
+  } else {
+    h+=`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--dim);font-size:13px">Zatím žádné zprávy</div>`;
+  }
+  h+=`</div></div>`;
+
+  // --- Panel 4: BODY ---
+  h+=`<div class="card alt ${window._rotIdx===4?'rot-active':''}"><div class="stitle">BODY</div><div class="lv-scroll" style="flex:1;min-height:0">`;
   const racePoints=[25,18,15,12,10,8,6,4,2,1,0,0,0,0,0,0,0,0,0,0];
   h+=`<div style="display:grid;grid-template-columns:20px 1fr auto;gap:2px 6px;font-size:12px">`;
   activeOrder.slice(0,10).forEach((dn,i)=>{
@@ -1848,10 +1873,10 @@ function demoFetchLiveData(){
     h+=`<div style="font-weight:600;color:#${d.team_colour||'555'}">${d.name_acronym||'?'}</div>`;
     h+=`<div style="font-weight:800;text-align:right">${pts}<span style="font-size:10px;color:var(--dim);font-weight:400"> b.</span></div>`;
   });
-  h+=`</div></div>`;
+  h+=`</div></div></div>`;
 
-  // POČASÍ
-  h+=`<div class="card alt" style="margin-bottom:0"><div class="stitle">POČASÍ</div>`;
+  // --- Panel 5: POČASÍ ---
+  h+=`<div class="card alt ${window._rotIdx===5?'rot-active':''}"><div class="stitle">POČASÍ</div><div class="lv-scroll" style="flex:1;min-height:0">`;
   const trackTemp=42+seededRand(demoLap*7)*3;const airTemp=28+seededRand(demoLap*11)*2;
   const humidity=45+seededRand(demoLap*13)*10;const wind=8+seededRand(demoLap*17)*6;
   const pressure=1013+seededRand(demoLap*19)*4-2;
@@ -1859,9 +1884,10 @@ function demoFetchLiveData(){
   [{a:'TRK',l:'Trať',v:trackTemp.toFixed(1)+'°',c:'#E8002D'},{a:'AIR',l:'Vzduch',v:airTemp.toFixed(1)+'°',c:'#FFD700'},{a:'HUM',l:'Vlhkost',v:humidity.toFixed(0)+'%',c:'#0093CC'},{a:'WND',l:'Vítr',v:wind.toFixed(1)+' km/h',c:'#39B54A'},{a:'BAR',l:'Tlak',v:pressure.toFixed(0)+' hPa',c:'#A020F0'},{a:'RAIN',l:'Déšť',v:'0%',c:'var(--dim)'}].forEach(w=>{
     h+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--line)"><span style="font-weight:700;color:${w.c};font-size:10px;letter-spacing:0.5px">${w.a}</span><span style="font-weight:700;color:${w.c}">${w.v}</span></div>`;
   });
-  h+=`</div></div>`;
+  h+=`</div></div></div>`;
 
-  h+=`</div>`;
+  h+=`</div>`; // END rotate-panel
+  h+=`</div>`; // END COL 3
   h+=`</div>`; // END live-grid
 
   document.getElementById('liveContent').innerHTML=h;
@@ -2669,6 +2695,13 @@ function startDemo(){
   demoFetchLiveData();
   const intervals={fp:2500,quali:2000,race:4000};
   liveInterval=setInterval(demoFetchLiveData,intervals[demoSessionType]||4000);
+  // Auto-rotate right panel every 8s
+  if(window._rotInterval)clearInterval(window._rotInterval);
+  window._rotIdx=0;
+  window._rotInterval=setInterval(()=>{
+    if(window._rotPaused)return;
+    window._rotIdx=(window._rotIdx+1)%6;
+  },8000);
 }
 
 function stopLive(){
