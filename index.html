@@ -1737,9 +1737,9 @@ function demoFetchLiveData(){
       h+=`<div class="pit-row"><div class="pit-lap">L${p.lap}</div>`;
       h+=`<div class="pit-driver" style="color:#${d.team_colour||'555'}">${d.name_acronym||'?'}</div>`;
       h+=`<div style="display:flex;align-items:center;gap:4px">`;
-      h+=`<div class="live-tire tire-${p.from}" style="width:20px;height:20px;font-size:8px;margin-left:0">${p.from}</div>`;
+      h+=`<div class="live-tire tire-${p.from}" style="width:20px;height:20px;font-size:8px;margin-left:0"><span style="position:relative;z-index:2">${p.from}</span></div>`;
       h+=`<span style="color:var(--dim);font-size:11px">→</span>`;
-      h+=`<div class="live-tire tire-${p.to}" style="width:20px;height:20px;font-size:8px;margin-left:0">${p.to}</div></div>`;
+      h+=`<div class="live-tire tire-${p.to}" style="width:20px;height:20px;font-size:8px;margin-left:0"><span style="position:relative;z-index:2">${p.to}</span></div></div>`;
       h+=`<div class="pit-dur" style="text-align:right"><span style="font-weight:700">${p.pit?p.pit.toFixed(1)+'s':''}</span>${p.penalty?'<span style="font-size:10px;color:#FFA500;font-weight:700;margin-left:3px">+'+p.penalty+'s</span>':''}<span style="font-size:11px;color:var(--dim);margin-left:3px">${p.dur.toFixed(1)}s</span></div></div>`;
     });
   } else {
