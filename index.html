@@ -95,8 +95,8 @@ nav button:hover:not(.on){color:var(--mid)}
 .live-grid{display:grid;grid-template-columns:1fr;gap:10px;height:calc(100vh - 16px);overflow:hidden}
 @media(min-width:900px){.live-grid{grid-template-columns:1fr 1fr;align-items:stretch}}
 @media(min-width:1200px){.live-grid{grid-template-columns:1.2fr 1fr 1fr;align-items:stretch}}
-.live-col{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden}
-.live-col>.card{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.live-col{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden;height:100%}
+.live-col>.card{min-height:0;overflow:hidden;display:flex;flex-direction:column}
 .live-col>.card>.lv-scroll{flex:1;min-height:0;overflow-y:auto}
 .rotate-panel{position:relative;flex:1;min-height:0;overflow:hidden}
 .rotate-panel>.card{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity 0.5s;display:flex;flex-direction:column;overflow:hidden}
@@ -1449,7 +1449,9 @@ let demoLap=1;
 
 // Demo data — 5 kol, DNF + DSQ showcase
 const DEMO_LAPS=7;
-const DEMO_DRIVERS={
+
+// Dynamic driver loading from OpenF1 API
+let DEMO_DRIVERS={
   1:{driver_number:1,name_acronym:'NOR',full_name:'Lando Norris',team_name:'McLaren',team_colour:'FF8000'},
   81:{driver_number:81,name_acronym:'PIA',full_name:'Oscar Piastri',team_name:'McLaren',team_colour:'FF8000'},
   63:{driver_number:63,name_acronym:'RUS',full_name:'George Russell',team_name:'Mercedes',team_colour:'27F4D2'},
@@ -1474,7 +1476,46 @@ const DEMO_DRIVERS={
   77:{driver_number:77,name_acronym:'BOT',full_name:'Valtteri Bottas',team_name:'Cadillac',team_colour:'96989B'}
 };
 
-const DEMO_ORDER=[1,81,3,16,63,14,31,44,27,18,5,87,55,12,23,6,41,30,10,43,11,77];
+// Fetch drivers from OpenF1 API — updates DEMO_DRIVERS dynamically
+async function fetchDriversAPI(){
+  try{
+    const r=await fetch('https://api.openf1.org/v1/drivers?session_key=latest');
+    if(!r.ok)throw new Error('API '+r.status);
+    const data=await r.json();
+    if(!data||!data.length)return;
+    // Deduplicate: keep latest entry per driver_number
+    const seen={};
+    data.forEach(d=>{if(d.driver_number)seen[d.driver_number]=d;});
+    const drivers=Object.values(seen);
+    if(drivers.length<18)return; // Sanity check — expect 22
+    console.log('[API] Loaded '+drivers.length+' drivers from OpenF1');
+    // Update DEMO_DRIVERS with API data
+    drivers.forEach(d=>{
+      const dn=d.driver_number;
+      DEMO_DRIVERS[dn]={
+        driver_number:dn,
+        name_acronym:d.name_acronym||d.tla||(''+dn),
+        full_name:d.full_name||d.broadcast_name||('Driver '+dn),
+        team_name:d.team_name||'Unknown',
+        team_colour:(d.team_colour||'555555').replace('#',''),
+        headshot_url:d.headshot_url||null
+      };
+    });
+    // Update DEMO_ORDER if new drivers appeared
+    const apiNums=drivers.map(d=>d.driver_number).sort((a,b)=>a-b);
+    apiNums.forEach(dn=>{if(!DEMO_ORDER.includes(dn))DEMO_ORDER.push(dn);});
+    // Add default tires/age for new drivers
+    apiNums.forEach(dn=>{
+      if(!(dn in DEMO_START_TIRES))DEMO_START_TIRES[dn]='M';
+      if(!(dn in DEMO_START_AGE))DEMO_START_AGE[dn]=0;
+      if(!(dn in DEMO_PACE))DEMO_PACE[dn]=94.0+Math.random()*2;
+    });
+  }catch(e){console.log('[API] Driver fetch failed, using fallback:',e.message);}
+}
+// Fire and forget — don't block page load
+fetchDriversAPI();
+
+let DEMO_ORDER=[1,81,3,16,63,14,31,44,27,18,5,87,55,12,23,6,41,30,10,43,11,77];
 const DEMO_START_TIRES={1:'S',81:'S',3:'S',16:'S',63:'M',14:'M',31:'M',44:'M',27:'M',18:'M',5:'M',87:'M',55:'H',12:'M',23:'M',6:'M',41:'M',30:'M',10:'M',43:'H',11:'H',77:'H'};
 const DEMO_START_AGE={1:2,81:2,3:2,16:2,63:0,14:0,31:0,44:0,27:0,18:0,5:0,87:0,55:0,12:0,23:0,6:0,41:0,30:0,10:0,43:0,11:0,77:0};
 
@@ -1483,7 +1524,7 @@ const DEMO_SWAPS={
   4:[[3,2],[2,3]],  // VER passes PIA
 };
 
-const DEMO_PACE={1:88.2,81:88.6,3:88.45,16:89.1,63:88.9,14:90.8,31:91.2,44:91.5,27:90.5,18:91.0,5:91.8,87:91.6,55:92.0,12:92.2,23:92.8,6:89.5,41:93.0,30:93.2,10:93.8,43:94.5,11:94.0,77:94.8};
+let DEMO_PACE={1:88.2,81:88.6,3:88.45,16:89.1,63:88.9,14:90.8,31:91.2,44:91.5,27:90.5,18:91.0,5:91.8,87:91.6,55:92.0,12:92.2,23:92.8,6:89.5,41:93.0,30:93.2,10:93.8,43:94.5,11:94.0,77:94.8};
 const DEMO_LAPTIMES=[88.391,89.102,88.956,89.432,90.124,91.567,91.876,92.670,91.014,91.523,92.043,92.166,92.158,92.399,93.327,89.876,93.843,94.112,94.501,95.201,94.321,95.102];
 
 // Pit stops: LAW serves 5s penalty in pit on lap 3
@@ -1673,11 +1714,11 @@ function demoFetchLiveData(){
   h+=`<div class="live-col">`;
 
   // VÝSLEDKY (scrollable)
-  h+=`<div class="card" style="margin-bottom:0;flex:1;display:flex;flex-direction:column"><div class="stitle" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;flex-shrink:0"><span style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;background:var(--red);color:#fff;padding:2px 7px;border-radius:3px;font-weight:800;letter-spacing:1px">DEMO</span><span style="font-size:14px;font-weight:800;color:#fff;background:var(--red);padding:3px 10px;border-radius:5px;letter-spacing:0.5px;text-transform:none">${finished?'VÝSLEDEK':'K '+demoLap+'/'+DEMO_LAPS}</span></span><div style="display:flex;align-items:center;gap:6px"><div style="display:flex;gap:3px">`;
+  h+=`<div class="card" style="margin-bottom:0;flex:1;display:flex;flex-direction:column;min-height:0"><div class="stitle" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;flex-shrink:0"><span style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;background:var(--red);color:#fff;padding:2px 7px;border-radius:3px;font-weight:800;letter-spacing:1px">DEMO</span><span style="font-size:14px;font-weight:800;color:#fff;background:var(--red);padding:3px 10px;border-radius:5px;letter-spacing:0.5px;text-transform:none">${finished?'VÝSLEDEK':'K '+demoLap+'/'+DEMO_LAPS}</span></span><div style="display:flex;align-items:center;gap:6px"><div style="display:flex;gap:3px">`;
   h+=`<button onclick="demoGapMode='leader';demoLap--;demoFetchLiveData()" style="padding:2px 8px;border-radius:4px;border:1px solid ${demoGapMode==='leader'?'var(--red)':'var(--line)'};background:${demoGapMode==='leader'?'rgba(232,0,45,0.15)':'transparent'};color:${demoGapMode==='leader'?'var(--red)':'var(--dim)'};font-size:10px;font-weight:600;cursor:pointer">Lídr</button>`;
   h+=`<button onclick="demoGapMode='interval';demoLap--;demoFetchLiveData()" style="padding:2px 8px;border-radius:4px;border:1px solid ${demoGapMode==='interval'?'var(--red)':'var(--line)'};background:${demoGapMode==='interval'?'rgba(232,0,45,0.15)':'transparent'};color:${demoGapMode==='interval'?'var(--red)':'var(--dim)'};font-size:10px;font-weight:600;cursor:pointer">Int</button>`;
   h+=`</div><span style="font-size:11px;color:var(--dim)">${finished?'':'↻ '+new Date().toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span></div></div>`;
-  h+=`<div class="lv-scroll" style="flex:1;min-height:0;max-height:580px">`;
+  h+=`<div class="lv-scroll" style="flex:1;min-height:0">`;
   displayOrder.forEach((dn,i)=>{
     const d=DEMO_DRIVERS[dn];if(!d)return;
     const pos=i+1;
@@ -1724,7 +1765,7 @@ function demoFetchLiveData(){
   h+=`<div class="live-col">`;
 
   // STRATEGIE (scrollable - all 20 drivers)
-  h+=`<div class="card alt" style="margin-bottom:0;flex:1.2"><div class="stitle">STRATEGIE</div><div class="lv-scroll" style="flex:1;min-height:0">`;
+  h+=`<div class="card alt" style="margin-bottom:0;flex:1.4;min-height:0"><div class="stitle" style="flex-shrink:0">STRATEGIE</div><div class="lv-scroll" style="flex:1;min-height:0">`;
   const tireColors={S:'#E8002D',M:'#FFD700',H:'#ffffff',I:'#39B54A',W:'#0093CC'};
   activeOrder.forEach(dn=>{
     const d=DEMO_DRIVERS[dn]||{};
@@ -1745,7 +1786,7 @@ function demoFetchLiveData(){
   h+=`</div></div></div></div>`;
 
   // GAP CHART
-  h+=`<div class="card alt" style="margin-bottom:0;flex:0.8"><div class="stitle">GAP</div><div class="lv-scroll" style="flex:1;min-height:0">`;
+  h+=`<div class="card alt" style="margin-bottom:0;flex:0.6;min-height:0"><div class="stitle" style="flex-shrink:0">GAP</div><div class="lv-scroll" style="flex:1;min-height:0">`;
   if(!window._demoGapHistory)window._demoGapHistory={};
   activeOrder.slice(1,11).forEach((dn,idx)=>{
     if(!window._demoGapHistory[dn])window._demoGapHistory[dn]=[];
@@ -1877,9 +1918,9 @@ function demoFetchLiveData(){
   h+=`</div></div>`;
 
   // --- Panel 4: BODY ---
-  h+=`<div class="card alt ${window._rotIdx===4?'rot-active':''}"><div class="stitle">BODY</div><div class="lv-scroll" style="flex:1;min-height:0">`;
+  h+=`<div class="card alt ${window._rotIdx===4?'rot-active':''}"><div class="stitle" style="flex-shrink:0">BODY</div><div class="lv-scroll" style="flex:1;min-height:0">`;
   const racePoints=[25,18,15,12,10,8,6,4,2,1];
-  h+=`<div style="display:grid;grid-template-columns:20px 1fr auto;gap:2px 6px;font-size:12px">`;
+  h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;font-size:12px">`;
   displayOrder.forEach((dn,i)=>{
     const d=DEMO_DRIVERS[dn]||{};
     const isDNF=DEMO_DNF[dn]&&DEMO_DNF[dn].lap<=demoLap;
@@ -1887,30 +1928,31 @@ function demoFetchLiveData(){
     const pts=(!isDNF&&!isDSQ&&i<10)?racePoints[i]:0;
     const dim=(isDNF||isDSQ)?'opacity:0.3;':'';
     const noPoints=pts===0&&!isDNF&&!isDSQ;
-    h+=`<div style="font-weight:700;color:var(--dim);${dim}">${isDNF||isDSQ?'—':i+1}</div>`;
-    h+=`<div style="font-weight:600;color:#${d.team_colour||'555'};${dim}">${d.name_acronym||'?'}${isDNF?' <span style="font-size:9px;color:#E8002D">DNF</span>':''}${isDSQ?' <span style="font-size:9px;color:#E8002D">DSQ</span>':''}</div>`;
-    h+=`<div style="font-weight:800;text-align:right;${dim}${noPoints?'color:var(--dim);font-weight:400;':''}">${pts>0?pts:'+0'}<span style="font-size:10px;color:var(--dim);font-weight:400"> b.</span></div>`;
+    h+=`<div style="display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid var(--line);${dim}">`;
+    h+=`<span style="font-weight:700;color:var(--dim);width:18px;text-align:right;font-size:11px;flex-shrink:0">${isDNF||isDSQ?'—':i+1}</span>`;
+    h+=`<span style="width:4px;height:14px;border-radius:1px;background:#${d.team_colour||'555'};flex-shrink:0"></span>`;
+    h+=`<span style="font-weight:600;color:#${d.team_colour||'555'};flex:1">${d.name_acronym||'?'}${isDNF?' <span style="font-size:9px;color:#E8002D">DNF</span>':''}${isDSQ?' <span style="font-size:9px;color:#E8002D">DSQ</span>':''}</span>`;
+    h+=`<span style="font-weight:800;${noPoints?'color:var(--dim);font-weight:400;':''}">${pts>0?pts:'+0'}</span>`;
+    h+=`</div>`;
   });
   h+=`</div></div></div>`;
 
   // --- Panel 5: POČASÍ ---
-  h+=`<div class="card alt ${window._rotIdx===5?'rot-active':''}"><div class="stitle">POČASÍ</div><div class="lv-scroll" style="flex:1;min-height:0">`;
+  h+=`<div class="card alt ${window._rotIdx===5?'rot-active':''}"><div class="stitle" style="flex-shrink:0">POČASÍ</div><div style="flex:1;display:flex;flex-direction:column;min-height:0;gap:8px;padding:0 0 8px">`;
   const trackTemp=42+seededRand(demoLap*7)*3;const airTemp=28+seededRand(demoLap*11)*2;
   const humidity=45+seededRand(demoLap*13)*10;const wind=8+seededRand(demoLap*17)*6;
   const pressure=1013+seededRand(demoLap*19)*4-2;
   const rainChance=Math.max(0,Math.min(100,Math.round(seededRand(demoLap*23)*15)));
-  h+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">`;
-  [{icon:'🌡',label:'TRAŤ',v:trackTemp.toFixed(1)+'°C',c:'#E8002D'},{icon:'🌤',label:'VZDUCH',v:airTemp.toFixed(1)+'°C',c:'#FFD700'},{icon:'💧',label:'VLHKOST',v:humidity.toFixed(0)+'%',c:'#0093CC'},{icon:'💨',label:'VÍTR',v:wind.toFixed(1)+' km/h',c:'#39B54A'},{icon:'📊',label:'TLAK',v:pressure.toFixed(0)+' hPa',c:'#A020F0'},{icon:'🌧',label:'DÉŠŤ',v:rainChance+'%',c:rainChance>30?'#0093CC':'var(--dim)'}].forEach(w=>{
-    h+=`<div style="background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:8px;padding:8px;text-align:center">`;
-    h+=`<div style="font-size:16px;margin-bottom:2px">${w.icon}</div>`;
-    h+=`<div style="font-size:9px;color:var(--dim);letter-spacing:1px;font-weight:600">${w.label}</div>`;
-    h+=`<div style="font-size:14px;font-weight:800;color:${w.c};margin-top:2px">${w.v}</div>`;
+  h+=`<div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap">`;
+  [{icon:'🌡',label:'TRK',v:trackTemp.toFixed(0)+'°',c:'#E8002D'},{icon:'🌤',label:'AIR',v:airTemp.toFixed(0)+'°',c:'#FFD700'},{icon:'💧',label:'HUM',v:humidity.toFixed(0)+'%',c:'#0093CC'},{icon:'💨',label:'WND',v:wind.toFixed(0)+' km/h',c:'#39B54A'},{icon:'📊',label:'BAR',v:pressure.toFixed(0),c:'#A020F0'},{icon:'🌧',label:'RAIN',v:rainChance+'%',c:rainChance>30?'#0093CC':'var(--dim)'}].forEach(w=>{
+    h+=`<div style="flex:1;min-width:60px;background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:6px;padding:4px 6px;text-align:center">`;
+    h+=`<div style="font-size:9px;color:var(--dim);letter-spacing:0.5px;font-weight:600">${w.label}</div>`;
+    h+=`<div style="font-size:13px;font-weight:800;color:${w.c}">${w.v}</div>`;
     h+=`</div>`;
   });
   h+=`</div>`;
-  // Windy rain radar embed - Yas Marina Circuit coordinates
-  h+=`<div style="flex:1;min-height:120px;border-radius:8px;overflow:hidden;border:1px solid var(--line)">`;
-  h+=`<iframe src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=km/h&zoom=10&overlay=rain&product=ecmwf&level=surface&lat=24.467&lon=54.603&detailLat=24.467&detailLon=54.603&marker=true&message=true" style="width:100%;height:100%;min-height:180px;border:0;filter:brightness(0.85)" loading="lazy"></iframe>`;
+  h+=`<div style="flex:1;min-height:0;border-radius:8px;overflow:hidden;border:1px solid var(--line)">`;
+  h+=`<iframe src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=km/h&zoom=10&overlay=rain&product=ecmwf&level=surface&lat=24.467&lon=54.603&detailLat=24.467&detailLon=54.603&marker=true&message=true" style="width:100%;height:100%;border:0;filter:brightness(0.85)" loading="lazy"></iframe>`;
   h+=`</div>`;
   h+=`</div></div>`;
 
