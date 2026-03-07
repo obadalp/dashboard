@@ -2785,11 +2785,38 @@ function formatLapTime(seconds){
 function startLive(session){
   liveSessionKey=session.session_key;
   liveSessionName=(session.session_name||session.session_type||'Session')+' · '+(session.meeting_name||'');
-  const banner=document.getElementById('homeLiveBanner');
-  if(banner){banner.style.display='block';document.getElementById('liveBannerText').textContent='LIVE: '+liveSessionName;}
-  const dot=document.getElementById('liveDot');if(dot)dot.style.display='block';
-  const btn=document.getElementById('liveBtn');if(btn)btn.style.color='#E8002D';
-  loadLiveDrivers(liveSessionKey).then(()=>{fetchLiveData();liveInterval=setInterval(fetchLiveData,10000);});
+  window._liveEmptyPolls=0;
+  loadLiveDrivers(liveSessionKey).then(()=>{
+    fetchLiveData().then(()=>{
+      // Only show banner if we actually got position data
+      const el=document.getElementById('liveContent');
+      const hasData=el&&(el.querySelector('.live-row')||el.querySelector('.live-grid'));
+      if(hasData){
+        const banner=document.getElementById('homeLiveBanner');
+        if(banner){banner.style.display='block';document.getElementById('liveBannerText').textContent='LIVE: '+liveSessionName;}
+        const dot=document.getElementById('liveDot');if(dot)dot.style.display='block';
+        const btn=document.getElementById('liveBtn');if(btn)btn.style.color='#E8002D';
+      }
+      liveInterval=setInterval(async()=>{
+        await fetchLiveData();
+        const el2=document.getElementById('liveContent');
+        const hasData2=el2&&(el2.querySelector('.live-row')||el2.querySelector('.live-grid'));
+        if(!hasData2){
+          window._liveEmptyPolls=(window._liveEmptyPolls||0)+1;
+          if(window._liveEmptyPolls>=3){stopLive();showNextSessionInfo();}
+        }else{
+          window._liveEmptyPolls=0;
+          // Show banner if not yet shown
+          const banner=document.getElementById('homeLiveBanner');
+          if(banner&&banner.style.display==='none'){
+            banner.style.display='block';document.getElementById('liveBannerText').textContent='LIVE: '+liveSessionName;
+            const dot=document.getElementById('liveDot');if(dot)dot.style.display='block';
+            const btn=document.getElementById('liveBtn');if(btn)btn.style.color='#E8002D';
+          }
+        }
+      },10000);
+    });
+  });
 }
 
 function startDemo(){
