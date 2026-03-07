@@ -1040,13 +1040,30 @@ async function loadLatestSession(){
     const hasLapCounts=Object.keys(lapCounts).length>0;
     let finalSorted;
     if(hasLapData&&(isPractice||isTest||isQuali)){
-      // Only include drivers who set a lap time
+      // Include drivers who set a lap time, sorted by best time
       const withTimes=Object.entries(lapTimes).map(([num,time])=>({
         driver_number:parseInt(num),
         best_time:time,
         position:0
       })).sort((a,b)=>a.best_time-b.best_time);
       withTimes.forEach((d,i)=>d.position=i+1);
+      // For qualifying: also include drivers WITHOUT a time (DNS/no time) at the end
+      if(isQuali){
+        const withTimeNums=new Set(withTimes.map(d=>d.driver_number));
+        // Check position data for drivers not in withTimes
+        sorted.forEach(p=>{
+          if(!withTimeNums.has(p.driver_number)){
+            withTimes.push({driver_number:p.driver_number,best_time:null,position:withTimes.length+1,status:'DNS'});
+          }
+        });
+        // Also check driverMap for any remaining drivers
+        Object.keys(driverMap).forEach(num=>{
+          const dn=parseInt(num);
+          if(!withTimeNums.has(dn)&&!withTimes.find(d=>d.driver_number===dn)){
+            withTimes.push({driver_number:dn,best_time:null,position:withTimes.length+1,status:'DNS'});
+          }
+        });
+      }
       finalSorted=withTimes;
     }else if(hasLapCounts&&(isPractice||isTest)){
       // No times but have lap counts — use position endpoint but filter to drivers with laps
@@ -1076,6 +1093,7 @@ async function loadLatestSession(){
       const pos=p.position||i+1;
       const lt=p.best_time||lapTimes[p.driver_number];
       const lc=lapCounts[p.driver_number];
+      const isDNS=p.status==='DNS'||(!lt&&!lc);
       const gap=lt&&fastestTime&&lt!==fastestTime?'+'+((lt-fastestTime).toFixed(3)):'';
       const timeStr=lt?formatTime(lt):'';
       
@@ -1087,14 +1105,17 @@ async function loadLatestSession(){
       
       // Right side value
       let rightVal='';
-      if(isRace||isSprint){
+      if(isDNS){
+        rightVal='NO TIME';
+      }else if(isRace||isSprint){
         rightVal=pos===1?'LEADER':(p.gap_to_leader||'');
       }else{
         rightVal=pos===1?timeStr:gap;
       }
       
-      const rightStyle=pos===1&&accentColor!=='var(--red)'?' style="color:'+accentColor+'"':'';
-      return '<div class="pod-row"><div class="pod-pos'+(pos===1?' p1':'')+'">'+pos+'</div><div class="pod-bar" style="background:'+col+'"></div><div class="pod-info"><div class="pod-name">'+name+'</div><div class="pod-team" style="color:'+col+'">'+teamLabel+'</div></div><div class="pod-gap"'+rightStyle+'>'+rightVal+'</div></div>';
+      const dnsStyle=isDNS?'opacity:0.45;':'';
+      const rightStyle=isDNS?' style="color:var(--dim);font-weight:600"':(pos===1&&accentColor!=='var(--red)'?' style="color:'+accentColor+'"':'');
+      return '<div class="pod-row" style="'+dnsStyle+'"><div class="pod-pos'+(pos===1?' p1':'')+'">'+pos+'</div><div class="pod-bar" style="background:'+col+(isDNS?';opacity:0.3':'')+'"></div><div class="pod-info"><div class="pod-name">'+name+'</div><div class="pod-team" style="color:'+col+'">'+teamLabel+'</div></div><div class="pod-gap"'+rightStyle+'>'+rightVal+'</div></div>';
     }
     
     let h='<div class="card" style="border-color:'+borderColor+'">';
