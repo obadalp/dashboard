@@ -271,6 +271,33 @@
         #chLegend label.off{opacity:0.3}
         #chLegend .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;box-sizing:border-box}
         #chTip{position:absolute;display:none;pointer-events:none;z-index:20;background:#0c0e10;border:1px solid rgba(255,255,255,0.12);padding:8px 12px;font-family:'Inter',sans-serif;font-size:12px;line-height:1.5;white-space:nowrap}
+        /* Live view */
+        .lv-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.06)}
+        .lv-row{display:grid;grid-template-columns:48px 6px minmax(0,1fr) 64px 96px 110px;gap:10px;align-items:center;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,0.04)}
+        .lv-row:last-child{border-bottom:none}
+        .lv-row:hover{background:#1e2022}
+        .lv-pos{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:900;font-style:italic;color:rgba(255,255,255,0.45);text-align:center}
+        .lv-pos.p1{color:#FFD700}.lv-pos.p2{color:#C0C0C0}.lv-pos.p3{color:#CD7F32}
+        .lv-bar{width:6px;height:36px}
+        .lv-name{font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:15px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .lv-team{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;opacity:0.85}
+        .lv-tyre{display:flex;align-items:center;gap:6px;justify-content:center}
+        .lv-tyre .tc{width:27px;height:27px;border-radius:50%;border:3px solid;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:12px;color:#e2e2e5}
+        .lv-tyre .ta{font-size:10px;color:rgba(255,255,255,0.45);font-weight:600}
+        .lv-lap{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;color:rgba(255,255,255,0.8)}
+        .lv-lap.fl{color:#c084fc;font-weight:900}
+        .lv-gap{font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:14px;text-align:right;font-variant-numeric:tabular-nums}
+        .rc-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px;line-height:1.45}
+        .rc-item:last-child{border-bottom:none}
+        .rc-time{color:rgba(255,255,255,0.35);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:11px;flex-shrink:0;padding-top:1px}
+        .rc-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;margin-top:4px}
+        #lvFlagBanner{font-family:'Space Grotesk',sans-serif;font-weight:900;text-transform:uppercase;letter-spacing:3px;text-align:center;padding:12px;margin-bottom:4px;font-size:15px}
+        @media(max-width:768px){
+          .lv-row{grid-template-columns:34px 5px minmax(0,1fr) 52px 84px;gap:8px;padding:7px 10px}
+          .lv-row .lv-lap{display:none}
+          .lv-name{font-size:13px}
+          .lv-pos{font-size:16px}
+        }
     </style>
 </head>
 <body class="bg-background text-on-surface font-body selection:bg-primary-container selection:text-white">
@@ -309,7 +336,7 @@
 <!-- ==================== HOME PAGE ==================== -->
 <div class="page show" id="p-home">
 <!-- Hero Section: Data HUD -->
-<section class="relative w-full overflow-hidden flex items-center bg-surface-container-lowest py-12 md:py-16" style="min-height:min(640px,calc(100vh - 80px))">
+<section id="heroSection" class="relative w-full overflow-hidden flex items-center bg-surface-container-lowest py-12 md:py-16" style="min-height:min(640px,calc(100vh - 80px))">
 <!-- National Flag Background (dynamically set) -->
 <div id="heroFlag" class="absolute inset-0 z-0 pointer-events-none bg-center bg-cover opacity-[0.5]" style="filter:contrast(1.05) saturate(1.1)"></div>
 <div class="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-background/5 z-[1]"></div>
@@ -356,6 +383,36 @@
 <p class="font-label text-[11px] uppercase tracking-widest text-primary mt-3 md:mt-4">Sekund</p>
 </div>
 </div>
+</div>
+</div>
+</div>
+</section>
+<!-- Live session view (OpenF1) -->
+<section id="liveSection" class="w-full bg-surface-container-lowest border-b border-outline-variant/10" style="display:none">
+<div class="max-w-[1920px] mx-auto px-4 md:px-8 py-8">
+<div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
+<div>
+<div class="flex items-center gap-3 mb-3">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container live-dot"></span>
+<span class="font-label text-xs tracking-[0.3em] uppercase text-primary-container" id="lvBadge">Live</span>
+<span class="font-label text-xs tracking-[0.3em] uppercase text-outline/50" id="lvLap"></span>
+</div>
+<h1 class="font-headline text-4xl md:text-5xl font-black italic tracking-tighter uppercase leading-[0.95]" id="lvTitle">Live session</h1>
+<p class="font-label text-[11px] uppercase tracking-widest text-outline/60 mt-2" id="lvSub"></p>
+</div>
+<div class="flex items-center gap-2">
+<button class="stog-btn active" id="lvModeLeader" onclick="setLiveGapMode('leader')">Lídr</button>
+<button class="stog-btn" id="lvModeInt" onclick="setLiveGapMode('interval')">Interval</button>
+</div>
+</div>
+<div id="lvFlagBanner" style="display:none"></div>
+<div class="grid grid-cols-12 gap-1">
+<div class="col-span-12 lg:col-span-8 bg-surface border border-outline-variant/10" id="lvTiming">
+<div class="text-center py-16 text-outline/50 font-label text-xs tracking-widest uppercase">Načítám živá data…</div>
+</div>
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-1">
+<div class="bg-surface border border-outline-variant/10 p-5" id="lvWeather"></div>
+<div class="bg-surface border border-outline-variant/10 p-5 flex-1" id="lvRC"></div>
 </div>
 </div>
 </div>
@@ -907,10 +964,12 @@ async function checkLive(){
       if(liveBadge){liveBadge.style.display='block';liveBadge.classList.add('live-glow');}
       const sType=active.session_name||active.session_type||'Session';
       document.getElementById('heroSession').textContent='Právě probíhá · '+sType;
+      startLiveView(active);
       if(heroLabel){heroLabel.textContent='Live · právě probíhá';heroLabel.classList.remove('text-tertiary');heroLabel.classList.add('text-primary-container');}
       if(heroDot){heroDot.classList.remove('bg-tertiary');heroDot.classList.add('bg-primary-container','live-dot');}
     }else{
-      if(liveBadge){liveBadge.style.display='none';liveBadge.classList.remove('live-glow');}
+      if(!_liveDemo)stopLiveView();
+      if(liveBadge&&!_liveDemo){liveBadge.style.display='none';liveBadge.classList.remove('live-glow');}
       if(heroLabel&&heroLabel.textContent!=='Další závod'){
         heroLabel.textContent='Další závod';
         heroLabel.classList.remove('text-primary-container');
@@ -919,6 +978,218 @@ async function checkLive(){
       if(heroDot){heroDot.classList.remove('bg-primary-container','live-dot');heroDot.classList.add('bg-tertiary');}
     }
   }catch(e){}
+}
+
+// === LIVE VIEW (OpenF1) ===
+let _liveActive=false,_liveTimer=null,_liveSession=null,_liveDemo=false;
+let _liveDrivers={},_liveLaps={},_liveLapsMaxDate=null,_liveFastest={dur:Infinity,drv:null};
+let _liveGapMode='leader';
+let _liveState={pos:[],ints:[],stints:[],rc:[],wx:[]};
+const SESSION_CZ={'Race':'Závod','Qualifying':'Kvalifikace','Sprint':'Sprint','Sprint Qualifying':'Sprint kvalifikace','Sprint Shootout':'Sprint kvalifikace','Practice 1':'Trénink 1','Practice 2':'Trénink 2','Practice 3':'Trénink 3'};
+const TYRE_COLORS={S:'#e8002d',M:'#f5d020',H:'#e8e8e8',I:'#39b54a',W:'#2f7de1'};
+
+const _sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function of1(u,retries=2){
+  for(let i=0;i<=retries;i++){
+    try{
+      const r=await fetch(OF1+u,{mode:'cors'});
+      if(r.ok)return await r.json();
+      if(r.status!==429)return null;
+    }catch(e){}
+    if(i<retries)await _sleep(1500*(i+1));
+  }
+  return null;
+}
+function fmtLapTime(s){
+  if(s==null)return'';
+  const m=Math.floor(s/60);
+  return m+':'+((s-m*60).toFixed(3).padStart(6,'0'));
+}
+
+async function startLiveView(session,demo){
+  if(_liveActive)return;
+  _liveActive=true;_liveDemo=!!demo;_liveSession=session;
+  _liveDrivers={};_liveLaps={};_liveLapsMaxDate=null;_liveFastest={dur:Infinity,drv:null};
+  _liveState={pos:[],ints:[],stints:[],rc:[],wx:[]};
+  document.getElementById('heroSection').style.display='none';
+  document.getElementById('liveSection').style.display='block';
+  const sName=SESSION_CZ[session.session_name]||session.session_name||'Session';
+  document.getElementById('lvTitle').innerHTML=sName+' · <span class="text-primary-container">'+(session.location||'').toUpperCase()+'</span>';
+  document.getElementById('lvSub').textContent=(session.country_name?czCountry(session.country_name):'')+(session.date_start?' · '+new Date(session.date_start).toLocaleDateString('cs-CZ',{weekday:'long',day:'numeric',month:'long'}):'');
+  const badge=document.getElementById('lvBadge');
+  badge.textContent=demo?'Ukázka · záznam poslední session':'Live';
+  const navBadge=document.getElementById('liveBadge');
+  if(navBadge){navBadge.textContent=demo?'DEMO':'LIVE';navBadge.style.display='block';navBadge.classList.add('live-glow');}
+  const drs=await of1(`/drivers?session_key=${session.session_key}`);
+  (drs||[]).forEach(d=>{_liveDrivers[d.driver_number]=d;});
+  await livePoll();
+  if(!demo)_liveTimer=setInterval(livePoll,10000);
+}
+
+function stopLiveView(){
+  if(!_liveActive)return;
+  _liveActive=false;_liveDemo=false;
+  if(_liveTimer){clearInterval(_liveTimer);_liveTimer=null;}
+  document.getElementById('liveSection').style.display='none';
+  document.getElementById('heroSection').style.display='';
+  const navBadge=document.getElementById('liveBadge');
+  if(navBadge){navBadge.textContent='LIVE';navBadge.style.display='none';navBadge.classList.remove('live-glow');}
+}
+
+function setLiveGapMode(m){
+  _liveGapMode=m;
+  document.getElementById('lvModeLeader').classList.toggle('active',m==='leader');
+  document.getElementById('lvModeInt').classList.toggle('active',m==='interval');
+  if(_liveActive)renderLive();
+}
+
+function _isRaceSession(){return /race|sprint$/i.test(_liveSession?.session_name||_liveSession?.session_type||'');}
+
+async function livePoll(){
+  if(!_liveActive)return;
+  const k=_liveSession.session_key;
+  // Sekvenčně s rozestupy, ne naráz — OpenF1 při burstu vrací 429; při výpadku dotazu držíme poslední známý stav
+  const pos=await of1(`/position?session_key=${k}`);
+  if(pos&&pos.length){_liveState.pos=pos;renderLive();}
+  await _sleep(250);
+  if(_isRaceSession()){
+    // Intervaly jen za posledních 30 min (plná session = desetitisíce záznamů)
+    const endT=_liveSession.date_end?new Date(_liveSession.date_end).getTime():Date.now();
+    const cutoff=new Date(Math.min(Date.now(),endT)-30*60000).toISOString().slice(0,19);
+    const ints=await of1(`/intervals?session_key=${k}&date>${encodeURIComponent(cutoff)}`);
+    if(ints&&ints.length)_liveState.ints=ints;
+    await _sleep(250);
+  }
+  const stints=await of1(`/stints?session_key=${k}`);
+  if(stints&&stints.length)_liveState.stints=stints;
+  await _sleep(250);
+  const rc=await of1(`/race_control?session_key=${k}`);
+  if(rc&&rc.length)_liveState.rc=rc;
+  await _sleep(250);
+  const wx=await of1(`/weather?session_key=${k}`);
+  if(wx&&wx.length)_liveState.wx=wx;
+  await _sleep(250);
+  // Kola inkrementálně (plný dotaz jen poprvé)
+  let lapsUrl=`/laps?session_key=${k}`;
+  if(_liveLapsMaxDate)lapsUrl+=`&date_start>${encodeURIComponent(_liveLapsMaxDate)}`;
+  const laps=await of1(lapsUrl);
+  (laps||[]).forEach(l=>{
+    if(l.date_start&&(!_liveLapsMaxDate||l.date_start>_liveLapsMaxDate))_liveLapsMaxDate=l.date_start;
+    const cur=_liveLaps[l.driver_number];
+    if(!cur||(l.lap_number||0)>=(cur.lap_number||0))_liveLaps[l.driver_number]=l;
+    if(l.lap_duration&&l.lap_duration<_liveFastest.dur)_liveFastest={dur:l.lap_duration,drv:l.driver_number};
+  });
+  renderLive();
+}
+
+function renderLive(){
+  const{pos,ints,stints,rc,wx}=_liveState;
+  // Nejnovější záznam na jezdce
+  const latestPos={},latestInt={},latestStint={};
+  pos.forEach(p=>{if(!latestPos[p.driver_number]||p.date>latestPos[p.driver_number].date)latestPos[p.driver_number]=p;});
+  (ints||[]).forEach(i=>{if(!latestInt[i.driver_number]||i.date>latestInt[i.driver_number].date)latestInt[i.driver_number]=i;});
+  stints.forEach(s=>{if(!latestStint[s.driver_number]||(s.stint_number||0)>(latestStint[s.driver_number].stint_number||0))latestStint[s.driver_number]=s;});
+  const sorted=Object.values(latestPos).sort((a,b)=>(a.position||99)-(b.position||99));
+
+  // Počítadlo kol (jen závod/sprint)
+  const maxLap=Math.max(0,...Object.values(_liveLaps).map(l=>l.lap_number||0));
+  document.getElementById('lvLap').textContent=maxLap>0&&/race|sprint$/i.test(_liveSession.session_name||'')?'· Kolo '+maxLap:'';
+
+  // Vlajkový banner
+  const banner=document.getElementById('lvFlagBanner');
+  const fb=liveFlagBanner(rc);
+  if(fb){banner.style.display='block';banner.style.background=fb.bg;banner.style.color=fb.fg;banner.textContent=fb.txt;}
+  else banner.style.display='none';
+
+  let h=`<div class="lv-head">
+    <span class="font-label text-[10px] uppercase tracking-[0.25em] text-outline/50">Živé pořadí</span>
+    <span class="font-label text-[10px] uppercase tracking-widest text-outline/40">↻ ${new Date().toLocaleTimeString('cs-CZ')}</span>
+  </div>`;
+  if(!sorted.length){
+    h+='<div class="text-center py-16 text-outline/50 font-label text-xs tracking-widest uppercase">Zatím žádná data ze session</div>';
+  }
+  sorted.forEach(p=>{
+    const d=_liveDrivers[p.driver_number]||{};
+    const fullName=d.full_name||d.broadcast_name||('#'+p.driver_number);
+    const name=fullName.replace(/^(\S)\S+\s+/,'$1. ');
+    const team=d.team_name||'';
+    const col='#'+(d.team_colour||'555555');
+    const posN=p.position||0;
+    const posCls=posN===1?'p1':posN===2?'p2':posN===3?'p3':'';
+    const st=latestStint[p.driver_number];
+    const tyre=st&&st.compound?st.compound.charAt(0).toUpperCase():null;
+    const tyreCol=tyre?(TYRE_COLORS[tyre]||'#888'):null;
+    const tyreAge=st?((st.lap_end||maxLap)-(st.lap_start||0)+(st.tyre_age_at_start||0)):null;
+    const lap=_liveLaps[p.driver_number];
+    const isFl=_liveFastest.drv===p.driver_number&&_liveFastest.dur<Infinity;
+    const iv=latestInt[p.driver_number];
+    let gap='';
+    if(posN===1&&iv)gap='<span style="color:#39b54a">LÍDR</span>';
+    else if(iv){
+      let v=_liveGapMode==='interval'?iv.interval:iv.gap_to_leader;
+      if(v==null)v=_liveGapMode==='interval'?iv.gap_to_leader:iv.interval;
+      gap=v==null?'—':(typeof v==='number'?'+'+v.toFixed(3):String(v));
+    }else if(lap&&lap.lap_duration){gap=fmtLapTime(lap.lap_duration);}
+    h+=`<div class="lv-row">
+      <div class="lv-pos ${posCls}">${posN||'—'}</div>
+      <div class="lv-bar" style="background:${col}"></div>
+      <div style="min-width:0">
+        <div class="lv-name">${name}</div>
+        <div class="lv-team" style="color:${col}">${team}</div>
+      </div>
+      <div class="lv-tyre">${tyre?`<span class="tc" style="border-color:${tyreCol}">${tyre}</span><span class="ta">${tyreAge!=null&&tyreAge>=0?tyreAge:''}</span>`:''}</div>
+      <div class="lv-lap${isFl?' fl':''}">${lap&&lap.lap_duration?fmtLapTime(lap.lap_duration):''}${isFl?' ⏱':''}</div>
+      <div class="lv-gap">${gap}</div>
+    </div>`;
+  });
+  document.getElementById('lvTiming').innerHTML=h;
+  renderLiveWeather(wx);
+  renderLiveRC(rc);
+}
+
+function liveFlagBanner(rc){
+  for(let i=rc.length-1;i>=0;i--){
+    const m=rc[i];
+    const f=(m.flag||'').toUpperCase();
+    const msg=(m.message||'').toUpperCase();
+    if(f==='RED')return{bg:'#e8002d',fg:'#fff',txt:'Červená vlajka'};
+    if(msg.includes('VIRTUAL SAFETY CAR DEPLOYED'))return{bg:'#f5d020',fg:'#1a1c1e',txt:'Virtual Safety Car'};
+    if(msg.includes('SAFETY CAR DEPLOYED'))return{bg:'#f5d020',fg:'#1a1c1e',txt:'Safety Car'};
+    if(f==='CHEQUERED')return{bg:'rgba(255,255,255,0.12)',fg:'#e2e2e5',txt:'Šachovnicová vlajka'};
+    if(f==='GREEN'||f==='CLEAR'||msg.includes('SAFETY CAR IN THIS LAP')||msg.includes('VSC ENDING'))return null;
+    if(f==='YELLOW'||f==='DOUBLE YELLOW')return{bg:'#f5d020',fg:'#1a1c1e',txt:'Žlutá vlajka'};
+  }
+  return null;
+}
+
+function renderLiveWeather(wx){
+  const el=document.getElementById('lvWeather');
+  const w=wx&&wx.length?wx[wx.length-1]:null;
+  if(!w){el.innerHTML='';return;}
+  const cells=[
+    ['Vzduch',Math.round(w.air_temperature)+'°C'],
+    ['Trať',Math.round(w.track_temperature)+'°C'],
+    ['Vlhkost',Math.round(w.humidity)+'%'],
+    ['Vítr',(w.wind_speed!=null?w.wind_speed.toFixed(1):'—')+' m/s'],
+    ['Déšť',w.rainfall?'Ano':'Ne'],
+    ['Tlak',Math.round(w.pressure)+' hPa']
+  ];
+  el.innerHTML=`<p class="font-label text-[10px] uppercase tracking-[0.25em] text-outline/50 mb-4">Počasí na trati</p>
+  <div class="grid grid-cols-3 gap-2">${cells.map(([l,v])=>`<div class="bg-surface-container-lowest border border-outline-variant/10 p-3 text-center"><div class="font-headline text-lg font-bold">${v}</div><div class="font-label text-[9px] uppercase tracking-widest text-outline/50 mt-1">${l}</div></div>`).join('')}</div>`;
+}
+
+function renderLiveRC(rc){
+  const el=document.getElementById('lvRC');
+  const items=(rc||[]).slice(-12).reverse();
+  let h='<p class="font-label text-[10px] uppercase tracking-[0.25em] text-outline/50 mb-3">Race control</p>';
+  if(!items.length)h+='<div class="text-outline/40 font-label text-xs uppercase tracking-widest py-4 text-center">Zatím žádné zprávy</div>';
+  items.forEach(m=>{
+    const t=m.date?new Date(m.date).toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'}):'';
+    const f=(m.flag||'').toUpperCase();
+    const dot=f==='YELLOW'||f==='DOUBLE YELLOW'?'#f5d020':f==='RED'?'#e8002d':f==='GREEN'||f==='CLEAR'?'#39b54a':f==='BLUE'?'#2f7de1':f==='CHEQUERED'?'#e2e2e5':'rgba(255,255,255,0.15)';
+    h+=`<div class="rc-item"><span class="rc-time">${t}</span><span class="rc-dot" style="background:${dot}"></span><span style="color:rgba(255,255,255,0.75)">${m.message||''}</span></div>`;
+  });
+  el.innerHTML=h;
 }
 
 // === SPA navigation ===
@@ -2105,6 +2376,12 @@ function renderH2H(){
 (async function init(){
   await loadNextRace();
   await loadLeaders();
+  // ?demo=1 → ukázka live pohledu s daty z poslední session
+  if(new URLSearchParams(location.search).has('demo')){
+    const s=await of1('/sessions?session_key=latest');
+    if(s&&s[0])startLiveView(s[0],true);
+    return;
+  }
   checkLive();
   setInterval(checkLive,60000);
 })();
