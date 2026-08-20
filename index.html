@@ -29,19 +29,19 @@
                     "secondary-container": "#43474d",
                     "on-tertiary-fixed-variant": "#005048",
                     "on-primary-fixed": "#410006",
-                    "surface-tint": "#ffb3af",
-                    "primary": "#ffb3af",
+                    "surface-tint": "#ff4655",
+                    "primary": "#ff4655",
                     "surface-container-high": "#282a2c",
-                    "outline-variant": "#5e3f3d",
-                    "outline": "#af8785",
+                    "outline-variant": "#34383d",
+                    "outline": "#9aa0a8",
                     "on-error-container": "#ffdad6",
                     "surface-container-highest": "#333537",
-                    "primary-fixed-dim": "#ffb3af",
+                    "primary-fixed-dim": "#ff4655",
                     "on-secondary-fixed": "#181c21",
                     "inverse-primary": "#bf0023",
                     "surface-variant": "#333537",
                     "surface-bright": "#38393c",
-                    "on-surface-variant": "#e8bcb9",
+                    "on-surface-variant": "#c7cace",
                     "on-primary-fixed-variant": "#930018",
                     "secondary-fixed": "#e0e2ea",
                     "on-error": "#690005",
@@ -81,7 +81,7 @@
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
         .bg-grid-pattern {
-            background-image: radial-gradient(circle at 2px 2px, rgba(94, 63, 61, 0.15) 1px, transparent 0);
+            background-image: radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
             background-size: 24px 24px;
         }
         .glass-panel {
@@ -95,6 +95,10 @@
         .nav-link{background:none;border:none;padding:4px 0;color:rgba(226,226,229,0.6);cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:700;letter-spacing:-0.025em;text-transform:uppercase;transition:color .2s;border-bottom:2px solid transparent}
         .nav-link:hover{color:#e2e2e5}
         .nav-link.active{color:#e8002d;border-bottom-color:#e8002d}
+        #mobileNav{display:none;flex-direction:column;padding:4px 32px 12px;border-top:1px solid rgba(255,255,255,0.06)}
+        #mobileNav.open{display:flex}
+        #mobileNav .nav-link{padding:12px 0;font-size:13px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.04)}
+        #mobileNav .nav-link.active{border-bottom-color:#e8002d}
         .page{display:none}
         .page.show{display:block;animation:fadeIn .3s ease}
         @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -123,7 +127,6 @@
         .cal-row.cancelled{cursor:default}
         .cal-head-row{display:grid;grid-template-columns:80px 140px 1fr auto;gap:20px;align-items:center;padding:20px 28px}
         .cal-rnd-big{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:900;color:rgba(255,255,255,0.25);font-style:italic}
-        .cal-date-box{font-label text-sm}
         .cal-name{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:-0.025em;line-height:1}
         .cal-loc{font-size:12px;color:rgba(255,255,255,0.4);font-weight:500;letter-spacing:1px;text-transform:uppercase;margin-top:6px}
         .cal-badge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:1.5px;padding:4px 8px;margin-left:10px;vertical-align:middle;text-transform:uppercase}
@@ -266,12 +269,13 @@
         #chLegend label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;color:rgba(255,255,255,0.6);padding:5px 12px;border:1px solid rgba(255,255,255,0.08);transition:all .15s}
         #chLegend label:hover{background:rgba(255,255,255,0.03)}
         #chLegend label.off{opacity:0.3}
-        #chLegend .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+        #chLegend .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;box-sizing:border-box}
+        #chTip{position:absolute;display:none;pointer-events:none;z-index:20;background:#0c0e10;border:1px solid rgba(255,255,255,0.12);padding:8px 12px;font-family:'Inter',sans-serif;font-size:12px;line-height:1.5;white-space:nowrap}
     </style>
 </head>
 <body class="bg-background text-on-surface font-body selection:bg-primary-container selection:text-white">
 <!-- TopNavBar -->
-<nav class="bg-[#121416]/90 dark:bg-[#121416]/90 backdrop-blur-xl docked full-width top-0 sticky z-50 border-b border-[#5E3F3D]/15 shadow-[0_0_40px_0_rgba(232,0,45,0.06)]">
+<nav class="bg-[#121416]/90 dark:bg-[#121416]/90 backdrop-blur-xl docked full-width top-0 sticky z-50 border-b border-white/5 shadow-[0_0_40px_0_rgba(232,0,45,0.06)]">
 <div class="flex justify-between items-center h-20 px-8 w-full max-w-[1920px] mx-auto">
 <div class="text-2xl font-black italic text-[#E2E2E5] tracking-widest font-headline">LAPSCOPE</div>
 <div class="hidden md:flex items-center gap-8 font-headline tracking-tighter uppercase font-bold" id="mainNav">
@@ -286,7 +290,18 @@
 </div>
 <div class="flex items-center gap-3">
 <div id="liveBadge" class="px-3 py-1 bg-primary-container text-on-primary-container font-headline text-sm font-bold tracking-widest" style="display:none">LIVE</div>
+<button id="navBurger" class="md:hidden text-on-surface" onclick="toggleMobileNav()" aria-label="Menu"><span class="material-symbols-outlined text-3xl align-middle">menu</span></button>
 </div>
+</div>
+<div id="mobileNav" class="md:hidden">
+<button class="nav-link active" data-page="home" onclick="go('home')">Domů</button>
+<button class="nav-link" data-page="standings" onclick="go('standings')">Pořadí</button>
+<button class="nav-link" data-page="results" onclick="go('results')">Výsledky</button>
+<button class="nav-link" data-page="chart" onclick="go('chart')">Graf</button>
+<button class="nav-link" data-page="h2h" onclick="go('h2h')">H2H</button>
+<button class="nav-link" data-page="calendar" onclick="go('calendar')">Kalendář</button>
+<button class="nav-link" data-page="teams" onclick="go('teams')">Týmy</button>
+<button class="nav-link" data-page="circuits" onclick="go('circuits')">Okruhy</button>
 </div>
 </nav>
 <main class="min-h-screen bg-surface-container-lowest">
@@ -294,12 +309,12 @@
 <!-- ==================== HOME PAGE ==================== -->
 <div class="page show" id="p-home">
 <!-- Hero Section: Data HUD -->
-<section class="relative w-full overflow-hidden flex items-center bg-surface-container-lowest" style="height:calc(100vh - 80px)">
+<section class="relative w-full overflow-hidden flex items-center bg-surface-container-lowest py-12 md:py-16" style="min-height:min(640px,calc(100vh - 80px))">
 <!-- National Flag Background (dynamically set) -->
-<div id="heroFlag" class="absolute inset-0 z-0 pointer-events-none bg-center bg-cover opacity-[0.18]" style="filter:grayscale(0.15) contrast(0.9)"></div>
-<div class="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-background/30 z-[1]"></div>
+<div id="heroFlag" class="absolute inset-0 z-0 pointer-events-none bg-center bg-cover opacity-[0.5]" style="filter:contrast(1.05) saturate(1.1)"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-background/5 z-[1]"></div>
 <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-[1]"></div>
-<div class="absolute inset-0 bg-grid-pattern opacity-25 z-[2]"></div>
+<div class="absolute inset-0 bg-grid-pattern opacity-20 z-[2]"></div>
 
 <div class="relative z-[3] w-full max-w-[1920px] mx-auto px-8 grid grid-cols-12 gap-8 items-center">
 <div class="col-span-12 md:col-span-6">
@@ -320,25 +335,25 @@
 </div>
 
 <!-- Horizontal Countdown (right of title, vertically centered) -->
-<div class="col-span-12 md:col-span-6 flex justify-end">
-<div class="glass-panel border border-outline-variant/15 px-10 py-8" style="width:848px;height:253px;max-width:100%">
+<div class="col-span-12 md:col-span-6 flex md:justify-end">
+<div class="glass-panel border border-outline-variant/15 px-5 py-6 md:px-10 md:py-8 w-full">
 <p class="font-label text-sm uppercase tracking-[0.4em] text-outline mb-6 text-center">Do startu zbývá</p>
-<div class="grid grid-cols-4 gap-4">
+<div class="grid grid-cols-4 gap-2 md:gap-4">
 <div class="text-center border-r border-outline-variant/15 pr-2">
-<p class="font-headline text-6xl lg:text-8xl font-black text-on-surface leading-none" id="cD">00</p>
-<p class="font-label text-[11px] uppercase tracking-widest text-primary mt-4">Dní</p>
+<p class="font-headline text-5xl md:text-6xl lg:text-8xl font-black text-on-surface leading-none" id="cD">00</p>
+<p class="font-label text-[11px] uppercase tracking-widest text-primary mt-3 md:mt-4">Dní</p>
 </div>
 <div class="text-center border-r border-outline-variant/15 pr-2">
-<p class="font-headline text-6xl lg:text-8xl font-black text-on-surface leading-none" id="cH">00</p>
-<p class="font-label text-[11px] uppercase tracking-widest text-primary mt-4">Hodin</p>
+<p class="font-headline text-5xl md:text-6xl lg:text-8xl font-black text-on-surface leading-none" id="cH">00</p>
+<p class="font-label text-[11px] uppercase tracking-widest text-primary mt-3 md:mt-4">Hodin</p>
 </div>
 <div class="text-center border-r border-outline-variant/15 pr-2">
-<p class="font-headline text-6xl lg:text-8xl font-black text-on-surface leading-none" id="cM">00</p>
-<p class="font-label text-[11px] uppercase tracking-widest text-primary mt-4">Minut</p>
+<p class="font-headline text-5xl md:text-6xl lg:text-8xl font-black text-on-surface leading-none" id="cM">00</p>
+<p class="font-label text-[11px] uppercase tracking-widest text-primary mt-3 md:mt-4">Minut</p>
 </div>
 <div class="text-center">
-<p class="font-headline text-6xl lg:text-8xl font-black text-on-surface leading-none" id="cS">00</p>
-<p class="font-label text-[11px] uppercase tracking-widest text-primary mt-4">Sekund</p>
+<p class="font-headline text-5xl md:text-6xl lg:text-8xl font-black text-on-surface leading-none" id="cS">00</p>
+<p class="font-label text-[11px] uppercase tracking-widest text-primary mt-3 md:mt-4">Sekund</p>
 </div>
 </div>
 </div>
@@ -370,7 +385,7 @@
 <span class="material-symbols-outlined text-tertiary" data-icon="thermostat">thermostat</span>
 </div>
 <div class="flex items-center gap-6">
-<span class="material-symbols-outlined text-6xl text-primary" id="wxIcon">partly_cloudy_day</span>
+<span class="material-symbols-outlined text-6xl text-tertiary" id="wxIcon">partly_cloudy_day</span>
 <div>
 <p class="font-headline text-5xl font-black" id="wxTemp">--°C</p>
 <p class="font-label text-xs uppercase tracking-[0.2em] text-outline/50" id="wxHum">Vlhkost: --%</p>
@@ -602,8 +617,9 @@
 <button class="stog-btn active" data-year="2026" onclick="setChYear(2026)">2026</button>
 </div>
 </div>
-<div class="bg-surface border border-outline-variant/10 p-5">
+<div class="bg-surface border border-outline-variant/10 p-5" style="position:relative">
 <canvas id="chCanvas" height="380"></canvas>
+<div id="chTip"></div>
 <div class="flex flex-wrap gap-2 mt-4" id="chLegend"></div>
 </div>
 </div>
@@ -620,7 +636,6 @@
 <span class="font-label text-xs tracking-[0.3em] uppercase text-tertiary">Porovnání jezdců</span>
 </div>
 <h1 class="font-headline text-4xl md:text-5xl font-black italic tracking-tighter uppercase leading-[0.95]">Head to <span class="text-primary-container">Head</span></h1>
-</div>
 </div>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -651,16 +666,16 @@
 </div>
 </main>
 <!-- Footer -->
-<footer class="w-full border-t border-[#5E3F3D]/10 bg-[#0C0E10] dark:bg-[#0C0E10]">
+<footer class="w-full border-t border-white/5 bg-[#0C0E10] dark:bg-[#0C0E10]">
 <div class="flex flex-col md:flex-row justify-between items-center py-12 px-8 gap-6 max-w-[1920px] mx-auto">
 <div class="font-headline text-[10px] uppercase tracking-[0.2em] font-light text-on-surface/40">
             © 2026 LAPSCOPE · F1 DASHBOARD
         </div>
 <div class="flex flex-wrap justify-center gap-8 font-headline text-[10px] uppercase tracking-[0.2em] font-light">
-<a class="text-[#AF8785]/50 hover:text-[#E8002D] transition-colors duration-200" href="https://www.formula1.com" target="_blank">Formula 1</a>
-<a class="text-[#AF8785]/50 hover:text-[#E8002D] transition-colors duration-200" href="https://www.fia.com" target="_blank">FIA</a>
-<a class="text-[#AF8785]/50 hover:text-[#E8002D] transition-colors duration-200" href="https://www.gpracingstats.com" target="_blank">Statistiky</a>
-<a class="text-[#AF8785]/50 hover:text-[#E8002D] transition-colors duration-200" href="#">Ochrana údajů</a>
+<a class="text-white/30 hover:text-[#E8002D] transition-colors duration-200" href="https://www.formula1.com" target="_blank">Formula 1</a>
+<a class="text-white/30 hover:text-[#E8002D] transition-colors duration-200" href="https://www.fia.com" target="_blank">FIA</a>
+<a class="text-white/30 hover:text-[#E8002D] transition-colors duration-200" href="https://www.gpracingstats.com" target="_blank">Statistiky</a>
+<a class="text-white/30 hover:text-[#E8002D] transition-colors duration-200" href="#">Ochrana údajů</a>
 </div>
 <div class="flex items-center gap-4">
 <span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
@@ -686,7 +701,7 @@ const CANCELLED_MEETINGS=['bahrain','saudi'];
 const _q=[];let _active=0;
 function _next(){if(!_q.length||_active>=1)return;const{u,r}=_q.shift();_active++;
   fetch(u,{mode:'cors'}).then(x=>x.ok?x.json():null).catch(()=>null)
-  .then(d=>{r(d);_active--;setTimeout(_next,400);});}
+  .then(d=>{r(d);_active--;setTimeout(_next,300);});}
 function fetchJSON(u){return new Promise(r=>{_q.push({u,r});_next();});}
 
 // === Countdown ===
@@ -725,9 +740,6 @@ function wxMap(code){
 }
 
 // === Load next race ===
-// Country name → 2-letter ISO code for flag
-const COUNTRY_ISO={'Australia':'au','China':'cn','Japan':'jp','Bahrain':'bh','Saudi Arabia':'sa','USA':'us','United States':'us','Italy':'it','Monaco':'mc','Spain':'es','Canada':'ca','Austria':'at','UK':'gb','United Kingdom':'gb','Belgium':'be','Hungary':'hu','Netherlands':'nl','Azerbaijan':'az','Singapore':'sg','Mexico':'mx','Brazil':'br','Qatar':'qa','UAE':'ae','United Arab Emirates':'ae','France':'fr','Germany':'de','Portugal':'pt','Russia':'ru','Turkey':'tr'};
-
 async function loadNextRace(){
   const yr=new Date().getFullYear();
   const nd=await fetchJSON(`${API}/${yr}/next.json`);
@@ -748,7 +760,7 @@ async function loadNextRace(){
     const startDay=raceDate.toLocaleDateString('cs-CZ',{weekday:'long',day:'numeric',month:'long'});
     document.getElementById('heroSession').textContent=startDay+' · '+startTime+' CET';
     // Country flag background
-    const iso=COUNTRY_ISO[country];
+    const iso=COUNTRY_FLAG_ISO[country];
     if(iso){
       const flagBgUrl=`https://flagcdn.com/w1280/${iso}.png`;
       document.getElementById('heroFlag').style.backgroundImage=`url('${flagBgUrl}')`;
@@ -804,7 +816,7 @@ async function loadWeather(lat,lng,raceDate){
         const wm=wxMap(code);
         const borderCls=d.highlight?'border-primary-container/40':'border-outline-variant/10';
         const lblCls=d.highlight?'text-primary-container font-bold':'text-outline/60';
-        const iconCls=d.highlight?'text-primary-container':'text-primary/70';
+        const iconCls=d.highlight?'text-primary-container':'text-on-surface/50';
         const tempCls=d.highlight?'text-on-surface':'text-on-surface/80';
         h+=`<div class="bg-surface p-3 border ${borderCls} text-center"><p class="font-label text-[9px] uppercase ${lblCls}">${d.lbl}</p><span class="material-symbols-outlined text-3xl ${iconCls} my-1 block">${wm.icon}</span><p class="font-headline text-sm font-bold ${tempCls}">${tmax}°</p></div>`;
       });
@@ -817,7 +829,7 @@ async function loadWeather(lat,lng,raceDate){
         const code=wd.daily.weather_code[d.i];
         const tmax=Math.round(wd.daily.temperature_2m_max[d.i]);
         const wm=wxMap(code);
-        h+=`<div class="bg-surface p-3 border border-outline-variant/10 text-center"><p class="font-label text-[9px] uppercase text-outline/60">${d.lbl}</p><span class="material-symbols-outlined text-3xl text-primary/70 my-1 block">${wm.icon}</span><p class="font-headline text-sm font-bold text-on-surface/80">${tmax}°</p></div>`;
+        h+=`<div class="bg-surface p-3 border border-outline-variant/10 text-center"><p class="font-label text-[9px] uppercase text-outline/60">${d.lbl}</p><span class="material-symbols-outlined text-3xl text-on-surface/50 my-1 block">${wm.icon}</span><p class="font-headline text-sm font-bold text-on-surface/80">${tmax}°</p></div>`;
       });
       el.innerHTML=h;
       const lbl=el.parentElement.querySelector('p.font-label');
@@ -914,8 +926,9 @@ function go(id,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('show'));
   const target=document.getElementById('p-'+id);
   if(target)target.classList.add('show');
-  document.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('active'));
-  if(btn)btn.classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  const mn=document.getElementById('mobileNav');
+  if(mn)mn.classList.remove('open');
   window.scrollTo({top:0,behavior:'smooth'});
   // Lazy-load page data
   if(id==='standings'&&!_standingsLoaded)loadStandings();
@@ -926,6 +939,7 @@ function go(id,btn){
   if(id==='chart'){if(!_chartLoaded)loadChart();else renderChart();}
   if(id==='h2h'&&!_h2hLoaded)loadH2H();
 }
+function toggleMobileNav(){document.getElementById('mobileNav').classList.toggle('open');}
 
 // === Standings state ===
 let _stYear=2026;
@@ -1117,7 +1131,8 @@ const GP_NAMES_CZ={
   'British':'Velké Británie','Belgian':'Belgie','Hungarian':'Maďarska','Dutch':'Nizozemska',
   'Italian':'Itálie','Azerbaijan':'Ázerbájdžánu','Singapore':'Singapuru',
   'United States':'USA','Mexico City':'Mexika','São Paulo':'Brazílie','Sao Paulo':'Brazílie',
-  'Las Vegas':'Las Vegas','Qatar':'Kataru','Abu Dhabi':'Abú Zabí','Madrid':'Madridu'
+  'Las Vegas':'Las Vegas','Qatar':'Kataru','Abu Dhabi':'Abú Zabí','Madrid':'Madridu',
+  'Brazilian':'Brazílie','Barcelona':'Barcelony'
 };
 // Překlad zemí
 const COUNTRY_CZ={
@@ -1129,10 +1144,6 @@ const COUNTRY_CZ={
   'Singapore':'Singapur','Mexico':'Mexiko','Brazil':'Brazílie','Qatar':'Katar',
   'UAE':'SAE','United Arab Emirates':'SAE','France':'Francie','Germany':'Německo'
 };
-function czGPName(raceName){
-  const clean=raceName.replace(' Grand Prix','').trim();
-  return GP_NAMES_CZ[clean]||clean;
-}
 function czCountry(c){return COUNTRY_CZ[c]||c;}
 
 // Flag utility: country name → ISO 2-letter code for flagcdn.com
@@ -1223,8 +1234,9 @@ function renderCalendar(){
     const country=czCountry(countryRaw);
     const flag=flagImg(countryRaw,'inline-block w-5 h-auto align-middle mr-2');
     const loc=locality+(country?' · '+country:'');
-    // Název GP česky
-    const gpName='Velká cena '+czGPName(r.raceName);
+    // Název GP česky, neznámé názvy nechat anglicky
+    const cleanName=(r.raceName||'').replace(' Grand Prix','').trim();
+    const gpName=GP_NAMES_CZ[cleanName]?'Velká cena '+GP_NAMES_CZ[cleanName]:r.raceName;
     // Rozsah data
     const startDate=r.FirstPractice?.date||r.date;
     const endDate=r.date;
@@ -1621,11 +1633,38 @@ async function loadLastWinner(circId){
 let _resultsLoaded=false;
 let _resYear=2026;
 const _resCache={};
+const _resFetching={};
+
+// Cache: 2025 je kompletní sezóna (localStorage natrvalo), 2026 průběžná (sessionStorage, 10 min)
+function hydrateResCache(){
+  try{
+    const p=JSON.parse(localStorage.getItem('ls_res_2025_v1')||'null');
+    if(p?.races?.length)_resCache[2025]=p.races;
+    const c=JSON.parse(sessionStorage.getItem('ls_res_2026_v1')||'null');
+    if(c?.races&&Date.now()-c.t<10*60*1000)_resCache[2026]=c.races;
+  }catch(e){}
+}
+hydrateResCache();
+function persistResCache(yr){
+  try{
+    const payload=JSON.stringify({t:Date.now(),races:_resCache[yr]});
+    (yr===2025?localStorage:sessionStorage).setItem('ls_res_'+yr+'_v1',payload);
+  }catch(e){}
+}
+function ensureResultsYear(yr){
+  if(_resCache[yr])return Promise.resolve(_resCache[yr]);
+  if(!_resFetching[yr])_resFetching[yr]=fetchResultsYear(yr).then(()=>{persistResCache(yr);return _resCache[yr];});
+  return _resFetching[yr];
+}
 
 async function loadResults(){
   _resultsLoaded=true;
-  await Promise.all([fetchResultsYear(2025),fetchResultsYear(2026)]);
   renderResults();
+  // Prioritně zvolený rok, druhý se dotáhne až potom na pozadí
+  const first=_resYear,second=first===2026?2025:2026;
+  ensureResultsYear(first)
+    .then(()=>{if(_resYear===first)renderResults();return ensureResultsYear(second);})
+    .then(()=>{if(_resYear===second)renderResults();});
 }
 
 async function fetchResultsYear(yr){
@@ -1672,12 +1711,17 @@ function setResYear(y){
   document.querySelectorAll('#resSeasonTog .stog-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.year)===y));
   document.getElementById('resSub').textContent='Sezóna '+y+(y===2025?' · kompletní':' · probíhá');
   renderResults();
+  if(!_resCache[y])ensureResultsYear(y).then(()=>{if(_resYear===y)renderResults();});
 }
 
 function renderResults(){
   const listEl=document.getElementById('resList');
   const races=_resCache[_resYear];
-  if(!races||!races.length){
+  if(!races){
+    listEl.innerHTML='<div class="text-center py-16 text-outline/50 font-label text-xs tracking-widest uppercase">Načítám výsledky…</div>';
+    return;
+  }
+  if(!races.length){
     listEl.innerHTML='<div class="text-center py-16 text-outline/50 font-label text-xs tracking-widest uppercase">Žádné výsledky</div>';
     return;
   }
@@ -1722,7 +1766,7 @@ function renderResults(){
     h+=`<div class="res-rnd">R${String(race.round).padStart(2,'0')}</div>`;
     h+=`<div class="res-date">${dateStr}</div>`;
     h+=`<div>`;
-    h+=`<div class="res-name">${czGPName(race.raceName).toUpperCase()}${hasSprint?'<span class="res-sprint-badge">SPRINT</span>':''}</div>`;
+    h+=`<div class="res-name">${race.raceName.replace(' Grand Prix',' GP').toUpperCase()}${hasSprint?'<span class="res-sprint-badge">SPRINT</span>':''}</div>`;
     if(winner)h+=`<div class="res-winner-mini"><span style="color:${winCol}">●</span> Vítěz: <strong>${winner.Driver.givenName+' '+winner.Driver.familyName}</strong> · ${winnerTeam}</div>`;
     h+=`</div>`;
     h+=`<div class="res-arrow" style="color:#e8002d;font-size:22px;font-weight:900;transition:transform .2s;opacity:0.5">›</div>`;
@@ -1756,11 +1800,10 @@ let _chVisibleDrivers={};
 
 async function loadChart(){
   _chartLoaded=true;
-  if(!_resCache[2025])await fetchResultsYear(2025);
-  if(!_resCache[2026])await fetchResultsYear(2026);
-  buildChartData(2025);
-  buildChartData(2026);
+  initChartInteraction();
   renderChart();
+  ensureResultsYear(2026).then(()=>{buildChartData(2026);if(_chYear===2026)renderChart();});
+  ensureResultsYear(2025).then(()=>{buildChartData(2025);if(_chYear===2025)renderChart();});
 }
 
 function setChYear(y){
@@ -1773,22 +1816,25 @@ function setChYear(y){
 function buildChartData(yr){
   const races=_resCache[yr];
   if(!races||!races.length){_chCache[yr]=null;return;}
-  const ptsSys={1:25,2:18,3:15,4:12,5:10,6:8,7:6,8:4,9:2,10:1};
   const driverCum={};
   const raceLabels=[];
   const sorted=[...races].sort((a,b)=>parseInt(a.round)-parseInt(b.round));
   sorted.forEach(race=>{
-    raceLabels.push(czGPName(race.raceName).substring(0,3).toUpperCase());
+    const _ln=(race.raceName||'').replace(' Grand Prix','').trim();
+    const _lblFix={'Austrian':'AUT','Abu Dhabi':'ABU','Las Vegas':'LVG','Mexico City':'MEX','São Paulo':'SAO','Sao Paulo':'SAO'};
+    raceLabels.push(_lblFix[_ln]||_ln.substring(0,3).toUpperCase());
+    // Body přímo z API (r.points) + body ze sprintu — sedí s oficiálním pořadím
+    const sprintPts={};
+    (race.SprintResults||[]).forEach(sr=>{sprintPts[sr.Driver.familyName]=parseFloat(sr.points)||0;});
     (race.Results||[]).forEach(r=>{
       const name=r.Driver.familyName;
-      const pos=parseInt(r.position);
-      const pts=ptsSys[pos]||0;
-      const flPt=(r.FastestLap&&r.FastestLap.rank==='1'&&pos<=10)?1:0;
+      const pts=(parseFloat(r.points)||0)+(sprintPts[name]||0);
       if(!driverCum[name])driverCum[name]={pts:[],team:r.Constructor?r.Constructor.name:'',fullName:r.Driver.givenName+' '+r.Driver.familyName};
+      while(driverCum[name].pts.length<raceLabels.length-1)driverCum[name].pts.push(driverCum[name].pts[driverCum[name].pts.length-1]||0);
       const prev=driverCum[name].pts.length?driverCum[name].pts[driverCum[name].pts.length-1]:0;
-      driverCum[name].pts.push(prev+pts+flPt);
+      driverCum[name].pts.push(prev+pts);
     });
-    // Fill zeros for drivers missing from this race
+    // Fill for drivers missing from this race
     Object.keys(driverCum).forEach(n=>{
       if(driverCum[n].pts.length<raceLabels.length){
         driverCum[n].pts.push(driverCum[n].pts[driverCum[n].pts.length-1]||0);
@@ -1799,7 +1845,13 @@ function buildChartData(yr){
     const la=a[1].pts,lb=b[1].pts;
     return(lb[lb.length-1]||0)-(la[la.length-1]||0);
   }).slice(0,10);
-  _chCache[yr]={drivers:sortedEntries.map(([name,d])=>({name,pts:d.pts,team:d.team,fullName:d.fullName})),labels:raceLabels};
+  // Druhý jezdec stejného týmu dostane čárkovanou čáru
+  const teamSeen={};
+  _chCache[yr]={drivers:sortedEntries.map(([name,d])=>{
+    const k=(d.team||'').toLowerCase();
+    const dash=(teamSeen[k]=(teamSeen[k]||0)+1)>1;
+    return{name,pts:d.pts,team:d.team,fullName:d.fullName,dash};
+  }),labels:raceLabels};
 }
 
 function renderChart(){
@@ -1809,7 +1861,9 @@ function renderChart(){
   if(!d||!d.drivers.length){
     const ctx=canvas.getContext('2d');
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    legendEl.innerHTML='<div class="text-center py-12 text-outline/50 font-label text-xs tracking-widest uppercase w-full">Žádná data pro '+_chYear+'</div>';
+    _chGeom=null;
+    const msg=_resCache[_chYear]?'Žádná data pro '+_chYear:'Načítám data…';
+    legendEl.innerHTML='<div class="text-center py-12 text-outline/50 font-label text-xs tracking-widest uppercase w-full">'+msg+'</div>';
     return;
   }
   // Initialize visibility
@@ -1849,6 +1903,7 @@ function renderChart(){
     if(!vis[dr.name])return;
     const col=tc(dr.team);
     ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.lineJoin='round';
+    ctx.setLineDash(dr.dash?[7,4]:[]);
     ctx.beginPath();
     dr.pts.forEach((p,i)=>{
       const x=pad.l+cw*(n>1?i/(n-1):0.5);
@@ -1856,23 +1911,62 @@ function renderChart(){
       if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
     });
     ctx.stroke();
+    ctx.setLineDash([]);
     // Final dot
     const lx=pad.l+cw*(n>1?1:0.5);
     const ly=pad.t+ch-ch*(dr.pts[dr.pts.length-1]/mx);
     ctx.fillStyle=col;ctx.beginPath();ctx.arc(lx,ly,5,0,Math.PI*2);ctx.fill();
   });
+  _chGeom={pad,cw,ch,mx,n,W,H};
   // Legend
   legendEl.innerHTML='';
   d.drivers.forEach(dr=>{
     const col=tc(dr.team);
     const lbl=document.createElement('label');
     lbl.className=vis[dr.name]?'':'off';
-    lbl.innerHTML=`<span class="dot" style="background:${col}"></span>${dr.name}`;
+    const dotStyle=dr.dash?`background:transparent;border:2px solid ${col}`:`background:${col}`;
+    lbl.innerHTML=`<span class="dot" style="${dotStyle}"></span>${dr.name}`;
     lbl.onclick=()=>{
       vis[dr.name]=!vis[dr.name];
       renderChart();
     };
     legendEl.appendChild(lbl);
+  });
+}
+
+// Tooltip + překreslení při změně velikosti okna
+let _chGeom=null,_chBound=false;
+function initChartInteraction(){
+  if(_chBound)return;_chBound=true;
+  const canvas=document.getElementById('chCanvas');
+  const tip=document.getElementById('chTip');
+  canvas.addEventListener('mousemove',e=>{
+    const d=_chCache[_chYear];
+    if(!_chGeom||!d){tip.style.display='none';return;}
+    const rect=canvas.getBoundingClientRect();
+    const x=e.clientX-rect.left,y=e.clientY-rect.top;
+    const g=_chGeom;
+    const vis=_chVisibleDrivers[_chYear]||{};
+    const i=Math.max(0,Math.min(g.n-1,Math.round((x-g.pad.l)/g.cw*(g.n-1))));
+    let best=null,bestDy=16;
+    d.drivers.forEach(dr=>{
+      if(!vis[dr.name])return;
+      const py=g.pad.t+g.ch-g.ch*((dr.pts[i]||0)/g.mx);
+      const dy=Math.abs(py-y);
+      if(dy<bestDy){bestDy=dy;best={dr,py};}
+    });
+    if(!best){tip.style.display='none';return;}
+    tip.innerHTML=`<strong style="color:${tc(best.dr.team)}">${best.dr.fullName}</strong><br>${d.labels[i]} · ${best.dr.pts[i]||0} b`;
+    tip.style.display='block';
+    const px=g.pad.l+g.cw*(g.n>1?i/(g.n-1):0.5);
+    tip.style.left=Math.min(px+16,g.W-150)+'px';
+    tip.style.top=Math.max(best.py-44,4)+'px';
+  });
+  canvas.addEventListener('mouseleave',()=>{tip.style.display='none';});
+  let t;
+  window.addEventListener('resize',()=>{
+    clearTimeout(t);
+    t=setTimeout(()=>{if(document.getElementById('p-chart').classList.contains('show'))renderChart();},200);
   });
 }
 
@@ -1883,11 +1977,11 @@ async function loadH2H(){
   _h2hLoaded=true;
   if(!_stCache[2025])await fetchStYear(2025);
   if(!_stCache[2026])await fetchStYear(2026);
-  if(!_resCache[2025])await fetchResultsYear(2025);
-  if(!_resCache[2026])await fetchResultsYear(2026);
   populateH2HSelect('A');
   populateH2HSelect('B');
   renderH2H();
+  // Podrobné statistiky (pódia, DNF, souboje) se doplní po načtení výsledků
+  Promise.all([ensureResultsYear(2026),ensureResultsYear(2025)]).then(()=>renderH2H());
 }
 
 function onH2HYearChange(side){
