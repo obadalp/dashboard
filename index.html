@@ -271,32 +271,42 @@
         #chLegend label.off{opacity:0.3}
         #chLegend .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;box-sizing:border-box}
         #chTip{position:absolute;display:none;pointer-events:none;z-index:20;background:#0c0e10;border:1px solid rgba(255,255,255,0.12);padding:8px 12px;font-family:'Inter',sans-serif;font-size:12px;line-height:1.5;white-space:nowrap}
-        /* Live view */
-        .lv-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.06)}
-        .lv-row{display:grid;grid-template-columns:48px 6px minmax(0,1fr) 64px 96px 110px;gap:10px;align-items:center;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,0.04)}
+        /* Live view — celé na jednu obrazovku, bez scrollování */
+        .lv-wrap{display:flex;flex-direction:column;gap:6px}
+        .lv-topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+        .lv-topbar .stog-btn{width:auto;padding:8px 18px;font-size:11px}
+        .lv-grid{display:grid;grid-template-columns:1fr;gap:4px;flex:1;min-height:0}
+        .lv-col{min-height:0}
+        .lv-side{display:flex;flex-direction:column;gap:4px;min-height:0}
+        .lv-rc{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}
+        .lv-row{display:grid;grid-template-columns:32px 5px minmax(0,1fr) 54px 80px 90px;gap:8px;align-items:center;padding:3px 12px;border-bottom:1px solid rgba(255,255,255,0.04);min-height:34px}
         .lv-row:last-child{border-bottom:none}
         .lv-row:hover{background:#1e2022}
-        .lv-pos{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:900;font-style:italic;color:rgba(255,255,255,0.45);text-align:center}
+        .lv-pos{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:900;font-style:italic;color:rgba(255,255,255,0.45);text-align:center}
         .lv-pos.p1{color:#FFD700}.lv-pos.p2{color:#C0C0C0}.lv-pos.p3{color:#CD7F32}
-        .lv-bar{width:6px;height:36px}
-        .lv-name{font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:15px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .lv-team{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;opacity:0.85}
-        .lv-tyre{display:flex;align-items:center;gap:6px;justify-content:center}
-        .lv-tyre .tc{width:27px;height:27px;border-radius:50%;border:3px solid;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:12px;color:#e2e2e5}
-        .lv-tyre .ta{font-size:10px;color:rgba(255,255,255,0.45);font-weight:600}
-        .lv-lap{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;color:rgba(255,255,255,0.8)}
+        .lv-bar{width:5px;align-self:stretch;margin:5px 0}
+        .lv-name{font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:13px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .lv-team{font-size:8.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;opacity:0.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .lv-tyre{display:flex;align-items:center;gap:5px;justify-content:center}
+        .lv-tyre .tc{width:22px;height:22px;border-radius:50%;border:2.5px solid;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:10px;color:#e2e2e5;flex-shrink:0}
+        .lv-tyre .ta{font-size:9px;color:rgba(255,255,255,0.45);font-weight:600}
+        .lv-lap{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums;color:rgba(255,255,255,0.8)}
         .lv-lap.fl{color:#c084fc;font-weight:900}
-        .lv-gap{font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:14px;text-align:right;font-variant-numeric:tabular-nums}
-        .rc-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px;line-height:1.45}
+        .lv-gap{font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums}
+        .rc-item{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;line-height:1.4}
         .rc-item:last-child{border-bottom:none}
-        .rc-time{color:rgba(255,255,255,0.35);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:11px;flex-shrink:0;padding-top:1px}
-        .rc-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;margin-top:4px}
-        #lvFlagBanner{font-family:'Space Grotesk',sans-serif;font-weight:900;text-transform:uppercase;letter-spacing:3px;text-align:center;padding:12px;margin-bottom:4px;font-size:15px}
+        .rc-time{color:rgba(255,255,255,0.35);font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:10px;flex-shrink:0;padding-top:1px}
+        .rc-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0;margin-top:4px}
+        #lvFlagBanner{font-family:'Space Grotesk',sans-serif;font-weight:900;text-transform:uppercase;letter-spacing:3px;text-align:center;padding:7px;font-size:13px}
+        @media(min-width:1024px){
+          .lv-grid{grid-template-columns:1fr 1fr minmax(280px,0.85fr);grid-template-rows:minmax(0,1fr)}
+        }
+        @media(max-width:1023px){
+          .lv-row{min-height:44px}
+        }
         @media(max-width:768px){
-          .lv-row{grid-template-columns:34px 5px minmax(0,1fr) 52px 84px;gap:8px;padding:7px 10px}
+          .lv-row{grid-template-columns:28px 4px minmax(0,1fr) 48px 80px;gap:6px;padding:4px 10px}
           .lv-row .lv-lap{display:none}
-          .lv-name{font-size:13px}
-          .lv-pos{font-size:16px}
         }
     </style>
 </head>
@@ -351,7 +361,7 @@
 <span id="heroFlagBadge" class="inline-block" style="display:none"><img id="heroFlagImg" src="" class="h-5 w-auto" style="box-shadow:0 1px 4px rgba(0,0,0,0.5)"/></span>
 </div>
 <h1 class="font-headline text-5xl md:text-6xl lg:text-8xl font-black italic tracking-tighter text-on-surface uppercase leading-[0.95] mb-6">
-                <span id="heroRound">Velká cena</span> <br/> <span class="text-primary-container" id="heroCity">MELBOURNE</span>
+                <span id="heroRound">Grand Prix</span> <br/> <span class="text-primary-container" id="heroCity">MELBOURNE</span>
 </h1>
 <div class="flex gap-12 border-l-2 border-outline-variant/30 pl-8">
 <div>
@@ -389,30 +399,29 @@
 </section>
 <!-- Live session view (OpenF1) -->
 <section id="liveSection" class="w-full bg-surface-container-lowest border-b border-outline-variant/10" style="display:none">
-<div class="max-w-[1920px] mx-auto px-4 md:px-8 py-8">
-<div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
-<div>
-<div class="flex items-center gap-3 mb-3">
-<span class="w-2.5 h-2.5 rounded-full bg-primary-container live-dot"></span>
-<span class="font-label text-xs tracking-[0.3em] uppercase text-primary-container" id="lvBadge">Live</span>
-<span class="font-label text-xs tracking-[0.3em] uppercase text-outline/50" id="lvLap"></span>
+<div class="lv-wrap max-w-[1920px] mx-auto px-3 md:px-6 py-3 md:py-4">
+<div class="lv-topbar">
+<div class="flex items-center gap-3 min-w-0">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container live-dot flex-shrink-0"></span>
+<span class="font-label text-[10px] tracking-[0.25em] uppercase text-primary-container whitespace-nowrap" id="lvBadge">Live</span>
+<h1 class="font-headline text-xl md:text-2xl font-black italic tracking-tighter uppercase leading-none whitespace-nowrap overflow-hidden text-ellipsis" id="lvTitle">Live session</h1>
+<span class="font-label text-[10px] tracking-widest uppercase text-outline/50 whitespace-nowrap" id="lvLap"></span>
 </div>
-<h1 class="font-headline text-4xl md:text-5xl font-black italic tracking-tighter uppercase leading-[0.95]" id="lvTitle">Live session</h1>
-<p class="font-label text-[11px] uppercase tracking-widest text-outline/60 mt-2" id="lvSub"></p>
-</div>
-<div class="flex items-center gap-2">
-<button class="stog-btn active" id="lvModeLeader" onclick="setLiveGapMode('leader')">Lídr</button>
+<div class="flex items-center gap-3 flex-shrink-0">
+<span class="font-label text-[10px] uppercase tracking-widest text-outline/40" id="lvClock"></span>
+<button class="stog-btn active" id="lvModeLeader" onclick="setLiveGapMode('leader')">Leader</button>
 <button class="stog-btn" id="lvModeInt" onclick="setLiveGapMode('interval')">Interval</button>
 </div>
 </div>
 <div id="lvFlagBanner" style="display:none"></div>
-<div class="grid grid-cols-12 gap-1">
-<div class="col-span-12 lg:col-span-8 bg-surface border border-outline-variant/10" id="lvTiming">
+<div class="lv-grid">
+<div class="bg-surface border border-outline-variant/10 lv-col" id="lvColA">
 <div class="text-center py-16 text-outline/50 font-label text-xs tracking-widest uppercase">Načítám živá data…</div>
 </div>
-<div class="col-span-12 lg:col-span-4 flex flex-col gap-1">
-<div class="bg-surface border border-outline-variant/10 p-5" id="lvWeather"></div>
-<div class="bg-surface border border-outline-variant/10 p-5 flex-1" id="lvRC"></div>
+<div class="bg-surface border border-outline-variant/10 lv-col" id="lvColB"></div>
+<div class="lv-side">
+<div class="bg-surface border border-outline-variant/10 p-3" id="lvWeather"></div>
+<div class="bg-surface border border-outline-variant/10 p-3 lv-rc" id="lvRC"></div>
 </div>
 </div>
 </div>
@@ -811,7 +820,7 @@ async function loadNextRace(){
     TGT=raceDate;tick();
     // Hero
     document.getElementById('heroCity').textContent=city.toUpperCase();
-    document.getElementById('heroRound').textContent='Velká cena';
+    document.getElementById('heroRound').textContent='Grand Prix';
     // Start time (local CET)
     const startTime=raceDate.toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'});
     const startDay=raceDate.toLocaleDateString('cs-CZ',{weekday:'long',day:'numeric',month:'long'});
@@ -1011,13 +1020,19 @@ async function startLiveView(session,demo){
   _liveActive=true;_liveDemo=!!demo;_liveSession=session;
   _liveDrivers={};_liveLaps={};_liveLapsMaxDate=null;_liveFastest={dur:Infinity,drv:null};
   _liveState={pos:[],ints:[],stints:[],rc:[],wx:[]};
-  document.getElementById('heroSection').style.display='none';
+  // Během live schovat zbytek Domů i patičku — vše na jednu obrazovku bez scrollu
+  document.querySelectorAll('#p-home > section').forEach(s=>{if(s.id!=='liveSection')s.style.display='none';});
+  const ftr=document.querySelector('footer');
+  if(ftr)ftr.style.display='none';
+  const mainEl=document.querySelector('main');
+  if(mainEl)mainEl.style.minHeight='0';
   document.getElementById('liveSection').style.display='block';
+  window.scrollTo(0,0);
+  fitLiveHeight();
   const sName=SESSION_CZ[session.session_name]||session.session_name||'Session';
   document.getElementById('lvTitle').innerHTML=sName+' · <span class="text-primary-container">'+(session.location||'').toUpperCase()+'</span>';
-  document.getElementById('lvSub').textContent=(session.country_name?czCountry(session.country_name):'')+(session.date_start?' · '+new Date(session.date_start).toLocaleDateString('cs-CZ',{weekday:'long',day:'numeric',month:'long'}):'');
   const badge=document.getElementById('lvBadge');
-  badge.textContent=demo?'Ukázka · záznam poslední session':'Live';
+  badge.textContent=demo?'Demo':'Live';
   const navBadge=document.getElementById('liveBadge');
   if(navBadge){navBadge.textContent=demo?'DEMO':'LIVE';navBadge.style.display='block';navBadge.classList.add('live-glow');}
   const drs=await of1(`/drivers?session_key=${session.session_key}`);
@@ -1031,7 +1046,12 @@ function stopLiveView(){
   _liveActive=false;_liveDemo=false;
   if(_liveTimer){clearInterval(_liveTimer);_liveTimer=null;}
   document.getElementById('liveSection').style.display='none';
-  document.getElementById('heroSection').style.display='';
+  document.querySelectorAll('#p-home > section').forEach(s=>{if(s.id!=='liveSection')s.style.display='';});
+  const ftr=document.querySelector('footer');
+  if(ftr)ftr.style.display='';
+  const mainEl=document.querySelector('main');
+  if(mainEl)mainEl.style.minHeight='';
+  fitLiveHeight();
   const navBadge=document.getElementById('liveBadge');
   if(navBadge){navBadge.textContent='LIVE';navBadge.style.display='none';navBadge.classList.remove('live-glow');}
 }
@@ -1044,6 +1064,20 @@ function setLiveGapMode(m){
 }
 
 function _isRaceSession(){return /race|sprint$/i.test(_liveSession?.session_name||_liveSession?.session_type||'');}
+
+// Roztáhne live pohled přesně na výšku okna (bez scrollu), ať je nav vysoký jakkoliv
+function fitLiveHeight(){
+  const w=document.querySelector('#liveSection .lv-wrap');
+  if(!w)return;
+  if(_liveActive&&window.innerWidth>=1024){
+    w.style.height='';
+    const top=w.getBoundingClientRect().top;
+    w.style.height=Math.max(420,window.innerHeight-top)+'px';
+  }else{
+    w.style.height='';
+  }
+}
+window.addEventListener('resize',()=>{if(_liveActive)fitLiveHeight();});
 
 async function livePoll(){
   if(!_liveActive)return;
@@ -1101,14 +1135,8 @@ function renderLive(){
   if(fb){banner.style.display='block';banner.style.background=fb.bg;banner.style.color=fb.fg;banner.textContent=fb.txt;}
   else banner.style.display='none';
 
-  let h=`<div class="lv-head">
-    <span class="font-label text-[10px] uppercase tracking-[0.25em] text-outline/50">Živé pořadí</span>
-    <span class="font-label text-[10px] uppercase tracking-widest text-outline/40">↻ ${new Date().toLocaleTimeString('cs-CZ')}</span>
-  </div>`;
-  if(!sorted.length){
-    h+='<div class="text-center py-16 text-outline/50 font-label text-xs tracking-widest uppercase">Zatím žádná data ze session</div>';
-  }
-  sorted.forEach(p=>{
+  document.getElementById('lvClock').textContent='↻ '+new Date().toLocaleTimeString('cs-CZ');
+  const rows=sorted.map(p=>{
     const d=_liveDrivers[p.driver_number]||{};
     const fullName=d.full_name||d.broadcast_name||('#'+p.driver_number);
     const name=fullName.replace(/^(\S)\S+\s+/,'$1. ');
@@ -1124,13 +1152,13 @@ function renderLive(){
     const isFl=_liveFastest.drv===p.driver_number&&_liveFastest.dur<Infinity;
     const iv=latestInt[p.driver_number];
     let gap='';
-    if(posN===1&&iv)gap='<span style="color:#39b54a">LÍDR</span>';
+    if(posN===1&&iv)gap='<span style="color:#39b54a">LEADER</span>';
     else if(iv){
       let v=_liveGapMode==='interval'?iv.interval:iv.gap_to_leader;
       if(v==null)v=_liveGapMode==='interval'?iv.gap_to_leader:iv.interval;
       gap=v==null?'—':(typeof v==='number'?'+'+v.toFixed(3):String(v));
     }else if(lap&&lap.lap_duration){gap=fmtLapTime(lap.lap_duration);}
-    h+=`<div class="lv-row">
+    return `<div class="lv-row">
       <div class="lv-pos ${posCls}">${posN||'—'}</div>
       <div class="lv-bar" style="background:${col}"></div>
       <div style="min-width:0">
@@ -1142,7 +1170,20 @@ function renderLive(){
       <div class="lv-gap">${gap}</div>
     </div>`;
   });
-  document.getElementById('lvTiming').innerHTML=h;
+  // Pořadí ve dvou sloupcích (1–11 vlevo, 12–22 vpravo), řádky roztažené na výšku okna
+  const colA=document.getElementById('lvColA'),colB=document.getElementById('lvColB');
+  if(!rows.length){
+    colA.style.display='block';colA.style.gridTemplateRows='';
+    colA.innerHTML='<div class="text-center py-16 text-outline/50 font-label text-xs tracking-widest uppercase">Zatím žádná data ze session</div>';
+    colB.style.display='none';
+  }else{
+    const half=Math.ceil(rows.length/2);
+    colA.style.display='grid';colB.style.display='grid';
+    colA.style.gridTemplateRows=`repeat(${half},minmax(0,1fr))`;
+    colB.style.gridTemplateRows=`repeat(${half},minmax(0,1fr))`;
+    colA.innerHTML=rows.slice(0,half).join('');
+    colB.innerHTML=rows.slice(half).join('');
+  }
   renderLiveWeather(wx);
   renderLiveRC(rc);
 }
@@ -1152,12 +1193,12 @@ function liveFlagBanner(rc){
     const m=rc[i];
     const f=(m.flag||'').toUpperCase();
     const msg=(m.message||'').toUpperCase();
-    if(f==='RED')return{bg:'#e8002d',fg:'#fff',txt:'Červená vlajka'};
+    if(f==='RED')return{bg:'#e8002d',fg:'#fff',txt:'Red Flag'};
     if(msg.includes('VIRTUAL SAFETY CAR DEPLOYED'))return{bg:'#f5d020',fg:'#1a1c1e',txt:'Virtual Safety Car'};
     if(msg.includes('SAFETY CAR DEPLOYED'))return{bg:'#f5d020',fg:'#1a1c1e',txt:'Safety Car'};
-    if(f==='CHEQUERED')return{bg:'rgba(255,255,255,0.12)',fg:'#e2e2e5',txt:'Šachovnicová vlajka'};
+    if(f==='CHEQUERED')return{bg:'rgba(255,255,255,0.12)',fg:'#e2e2e5',txt:'Chequered Flag'};
     if(f==='GREEN'||f==='CLEAR'||msg.includes('SAFETY CAR IN THIS LAP')||msg.includes('VSC ENDING'))return null;
-    if(f==='YELLOW'||f==='DOUBLE YELLOW')return{bg:'#f5d020',fg:'#1a1c1e',txt:'Žlutá vlajka'};
+    if(f==='YELLOW'||f==='DOUBLE YELLOW')return{bg:'#f5d020',fg:'#1a1c1e',txt:'Yellow Flag'};
   }
   return null;
 }
@@ -1174,14 +1215,14 @@ function renderLiveWeather(wx){
     ['Déšť',w.rainfall?'Ano':'Ne'],
     ['Tlak',Math.round(w.pressure)+' hPa']
   ];
-  el.innerHTML=`<p class="font-label text-[10px] uppercase tracking-[0.25em] text-outline/50 mb-4">Počasí na trati</p>
-  <div class="grid grid-cols-3 gap-2">${cells.map(([l,v])=>`<div class="bg-surface-container-lowest border border-outline-variant/10 p-3 text-center"><div class="font-headline text-lg font-bold">${v}</div><div class="font-label text-[9px] uppercase tracking-widest text-outline/50 mt-1">${l}</div></div>`).join('')}</div>`;
+  el.innerHTML=`<p class="font-label text-[9px] uppercase tracking-[0.25em] text-outline/50 mb-2">Počasí na trati</p>
+  <div class="grid grid-cols-3 gap-1">${cells.map(([l,v])=>`<div class="bg-surface-container-lowest border border-outline-variant/10 p-2 text-center"><div class="font-headline text-sm font-bold leading-tight">${v}</div><div class="font-label text-[8px] uppercase tracking-widest text-outline/50 mt-0.5">${l}</div></div>`).join('')}</div>`;
 }
 
 function renderLiveRC(rc){
   const el=document.getElementById('lvRC');
-  const items=(rc||[]).slice(-12).reverse();
-  let h='<p class="font-label text-[10px] uppercase tracking-[0.25em] text-outline/50 mb-3">Race control</p>';
+  const items=(rc||[]).slice(-25).reverse();
+  let h='<p class="font-label text-[9px] uppercase tracking-[0.25em] text-outline/50 mb-2">Race control</p>';
   if(!items.length)h+='<div class="text-outline/40 font-label text-xs uppercase tracking-widest py-4 text-center">Zatím žádné zprávy</div>';
   items.forEach(m=>{
     const t=m.date?new Date(m.date).toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'}):'';
@@ -1394,17 +1435,6 @@ async function loadCalendar(){
 
 const MONTHS_CZ=['led','úno','bře','dub','kvě','čvn','čvc','srp','zář','říj','lis','pro'];
 const DAYS_CZ=['Ne','Po','Út','St','Čt','Pá','So'];
-// Překlad GP názvů do češtiny
-const GP_NAMES_CZ={
-  'Australian':'Austrálie','Chinese':'Číny','Japanese':'Japonska','Bahrain':'Bahrajnu',
-  'Saudi Arabian':'Saúdské Arábie','Miami':'Miami','Emilia Romagna':'Emilia-Romagna',
-  'Monaco':'Monaka','Spanish':'Španělska','Canadian':'Kanady','Austrian':'Rakouska',
-  'British':'Velké Británie','Belgian':'Belgie','Hungarian':'Maďarska','Dutch':'Nizozemska',
-  'Italian':'Itálie','Azerbaijan':'Ázerbájdžánu','Singapore':'Singapuru',
-  'United States':'USA','Mexico City':'Mexika','São Paulo':'Brazílie','Sao Paulo':'Brazílie',
-  'Las Vegas':'Las Vegas','Qatar':'Kataru','Abu Dhabi':'Abú Zabí','Madrid':'Madridu',
-  'Brazilian':'Brazílie','Barcelona':'Barcelony'
-};
 // Překlad zemí
 const COUNTRY_CZ={
   'Australia':'Austrálie','China':'Čína','Japan':'Japonsko','Bahrain':'Bahrajn',
@@ -1505,9 +1535,8 @@ function renderCalendar(){
     const country=czCountry(countryRaw);
     const flag=flagImg(countryRaw,'inline-block w-5 h-auto align-middle mr-2');
     const loc=locality+(country?' · '+country:'');
-    // Název GP česky, neznámé názvy nechat anglicky
-    const cleanName=(r.raceName||'').replace(' Grand Prix','').trim();
-    const gpName=GP_NAMES_CZ[cleanName]?'Velká cena '+GP_NAMES_CZ[cleanName]:r.raceName;
+    // Názvy GP anglicky (oficiální názvy z API)
+    const gpName=r.raceName||'';
     // Rozsah data
     const startDate=r.FirstPractice?.date||r.date;
     const endDate=r.date;
