@@ -136,6 +136,11 @@
         .cal-row.past{opacity:0.45}
         .cal-row.cancelled{opacity:0.35}
         .cal-row.cancelled{cursor:default}
+        .cal-past-toggle{display:flex;align-items:center;gap:12px;padding:16px 28px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.45);transition:all .2s;user-select:none}
+        .cal-past-toggle:hover{background:#1a1c1e;color:#e2e2e5}
+        .cal-past-toggle .cal-past-arrow{color:#e8002d;font-size:18px;font-weight:900;transition:transform .2s;display:inline-block}
+        .cal-past-toggle.open .cal-past-arrow{transform:rotate(90deg)}
+        .cal-past-toggle .cal-past-count{margin-left:auto;background:rgba(255,255,255,0.06);padding:3px 10px;font-size:11px;color:rgba(255,255,255,0.6)}
         .cal-head-row{display:grid;grid-template-columns:80px 140px 1fr auto;gap:20px;align-items:center;padding:20px 28px}
         .cal-rnd-big{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:900;color:rgba(255,255,255,0.25);font-style:italic}
         .cal-name{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:-0.025em;line-height:1}
@@ -776,12 +781,36 @@ function tc(n){if(!n)return"#af8785";const l=n.toLowerCase();for(const[k,c]of Ob
 // Cancelled races filter
 const CANCELLED_MEETINGS=['bahrain','saudi'];
 
-// Rate-limited fetch
-const _q=[];let _active=0;
-function _next(){if(!_q.length||_active>=1)return;const{u,r}=_q.shift();_active++;
+// Rate-limited fetch — až 4 souběžné dotazy, nejvýš 4 za sekundu (limit Jolpica API)
+const _q=[];let _active=0,_lastDispatch=0;
+const _MAX_PARALLEL=4,_MIN_GAP=250;
+function _next(){
+  if(!_q.length||_active>=_MAX_PARALLEL)return;
+  const wait=_MIN_GAP-(Date.now()-_lastDispatch);
+  if(wait>0){setTimeout(_next,wait);return;}
+  _lastDispatch=Date.now();
+  const{u,r}=_q.shift();_active++;
   fetch(u,{mode:'cors'}).then(x=>x.ok?x.json():null).catch(()=>null)
-  .then(d=>{r(d);_active--;setTimeout(_next,300);});}
+  .then(d=>{r(d);_active--;_next();});
+  _next();
+}
 function fetchJSON(u){return new Promise(r=>{_q.push({u,r});_next();});}
+
+// === Perzistentní cache ===
+// Dokončené sezóny se nemění → localStorage natrvalo. Probíhající → sessionStorage na 10 minut.
+const CUR_YEAR=new Date().getFullYear();
+function cacheRead(key,year){
+  try{
+    const raw=(year<CUR_YEAR?localStorage:sessionStorage).getItem(key);
+    if(!raw)return null;
+    const o=JSON.parse(raw);
+    if(year>=CUR_YEAR&&Date.now()-o.t>10*60*1000)return null;
+    return o.v;
+  }catch(e){return null;}
+}
+function cacheWrite(key,year,v){
+  try{(year<CUR_YEAR?localStorage:sessionStorage).setItem(key,JSON.stringify({t:Date.now(),v}));}catch(e){}
+}
 
 // === Countdown ===
 let TGT=null;
@@ -920,26 +949,24 @@ async function loadWeather(lat,lng,raceDate){
 
 // === Load championship leaders (top 5) ===
 async function loadLeaders(){
-  const yr=new Date().getFullYear();
-  const dd=await fetchJSON(`${API}/${yr}/driverStandings.json?limit=30`);
-  if(!dd||!dd.MRData)return;
+  const yr=CUR_YEAR;
+  // Sdílená cache se stránkou Pořadí — žádný dotaz navíc
+  const data=await ensureStYear(yr);
   try{
-    const list=dd.MRData.StandingsTable.StandingsLists[0];
-    if(!list||!list.DriverStandings||!list.DriverStandings.length)return;
-    const all=list.DriverStandings;
-    const top5=all.slice(0,5);
-    const maxPts=parseFloat(top5[0].points)||1;
-    const leaderPts=parseFloat(top5[0].points);
+    if(!data||!data.drivers||!data.drivers.length)return;
+    const top5=data.drivers.slice(0,5);
+    const maxPts=top5[0].pts||1;
+    const leaderPts=top5[0].pts;
     const feedEl=document.getElementById('driverFeed');
     document.getElementById('feedTitle').textContent='Pořadí šampionátu';
-    document.getElementById('feedSub').textContent=`Sezóna ${yr} · Po ${list.round}. závodě · Živá data`;
+    document.getElementById('feedSub').textContent=`Sezóna ${yr} · Po ${data.round}. závodě · Živá data`;
     let h='';
     top5.forEach((s,i)=>{
       const pos=i+1;
-      const name=s.Driver.familyName.toUpperCase();
-      const team=s.Constructors[0]?s.Constructors[0].name:'';
-      const pts=parseFloat(s.points);
-      const wins=parseInt(s.wins);
+      const name=s.lastName.toUpperCase();
+      const team=s.team||'';
+      const pts=s.pts;
+      const wins=s.wins;
       const barPct=Math.round((pts/maxPts)*100);
       const gap=pos===1?null:(leaderPts-pts);
       const teamCol=tc(team);
@@ -1277,6 +1304,7 @@ async function setStYear(y){
   _stYear=y;
   document.querySelectorAll('#stSeasonTog .stog-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.year)===y));
   renderStandings();
+  if(!_stCache[y])ensureStYear(y).then(()=>{if(_stYear===y)renderStandings();});
 }
 function setStType(t){
   _stType=t;
@@ -1285,14 +1313,26 @@ function setStType(t){
   renderStandings();
 }
 
+const _stFetching={};
+function ensureStYear(yr){
+  if(_stCache[yr])return Promise.resolve(_stCache[yr]);
+  const cached=cacheRead('ls_st_'+yr+'_v1',yr);
+  if(cached){_stCache[yr]=cached;return Promise.resolve(cached);}
+  if(!_stFetching[yr])_stFetching[yr]=fetchStYear(yr).then(()=>{
+    if(_stCache[yr])cacheWrite('ls_st_'+yr+'_v1',yr,_stCache[yr]);
+    return _stCache[yr];
+  });
+  return _stFetching[yr];
+}
+
 async function loadStandings(){
   _standingsLoaded=true;
-  // Fetch both years in parallel
-  await Promise.all([
-    fetchStYear(2025),
-    fetchStYear(2026)
-  ]);
   renderStandings();
+  // Nejdřív zvolený rok, druhý až potom na pozadí
+  const first=_stYear,second=first===2026?2025:2026;
+  ensureStYear(first)
+    .then(()=>{if(_stYear===first)renderStandings();return ensureStYear(second);})
+    .then(()=>{if(_stYear===second)renderStandings();});
 }
 
 async function fetchStYear(yr){
@@ -1434,7 +1474,9 @@ const CAL_CANCELLED_2026=[
 
 async function loadCalendar(){
   _calLoaded=true;
-  const yr=new Date().getFullYear();
+  const yr=CUR_YEAR;
+  const cached=cacheRead('ls_cal_'+yr+'_v1',yr);
+  if(cached){_calRaces=cached;renderCalendar();return;}
   const sd=await fetchJSON(`${API}/${yr}.json`);
   if(!sd||!sd.MRData){
     document.getElementById('calList').innerHTML='<div class="text-center py-16 text-outline/50 font-label text-xs tracking-widest uppercase">Chyba při načítání</div>';
@@ -1443,6 +1485,7 @@ async function loadCalendar(){
   try{
     const races=sd.MRData.RaceTable.Races;
     _calRaces=races;
+    cacheWrite('ls_cal_'+yr+'_v1',yr,races);
     renderCalendar();
   }catch(e){console.log('Calendar error:',e);}
 }
@@ -1508,11 +1551,20 @@ function fmtDay(iso){
   return DAYS_CZ[new Date(iso).getDay()];
 }
 
+let _calShowPast=false;
+function toggleCalPast(){
+  _calShowPast=!_calShowPast;
+  const wrap=document.getElementById('calPastWrap');
+  const btn=document.getElementById('calPastToggle');
+  if(wrap)wrap.style.display=_calShowPast?'block':'none';
+  if(btn)btn.classList.toggle('open',_calShowPast);
+}
+
 function renderCalendar(){
   if(!_calRaces)return;
   const now=new Date();
   const listEl=document.getElementById('calList');
-  let h='';
+  let h='',pastH='',pastCount=0;
 
   // Sloučit API závody + zrušené z fallbacku (detekce podle keywordu v názvu)
   const merged=[..._calRaces.map(r=>({...r,_cancelled:false}))];
@@ -1534,8 +1586,10 @@ function renderCalendar(){
   }
 
   merged.forEach(r=>{
+    let row='';
     const raceDate=new Date(r.date+'T'+(r.time||'14:00:00Z'));
     const isPast=!r._cancelled&&raceDate<now;
+    const isPastLike=raceDate<now; // i zrušené patří do minulosti
     const isNext=parseInt(r.round)===nextRound;
     const hasSprint=r.Sprint||r.SprintQualifying;
     let cls='cal-row';
@@ -1566,32 +1620,39 @@ function renderCalendar(){
     if(!r._cancelled)sessions.push({label:'Závod',date:r.date,time:r.time,isRace:true});
 
     const onclickAttr=r._cancelled?'':'onclick="this.classList.toggle(\'open\')"';
-    h+=`<div class="${cls}" ${onclickAttr}>`;
-    h+=`<div class="cal-head-row">`;
-    h+=`<div class="cal-rnd-big">${r._cancelled?'—':'R'+String(r.round).padStart(2,'0')}</div>`;
-    h+=`<div class="font-label text-sm text-outline/70 font-medium" style="white-space:nowrap">${dateStr}</div>`;
-    h+=`<div>`;
-    h+=`<div class="cal-name">${flag}${gpName}${hasSprint&&!r._cancelled?'<span class="cal-badge sprint">Sprint</span>':''}${badge}</div>`;
-    h+=`<div class="cal-loc">${loc}</div>`;
-    h+=`</div>`;
-    h+=`<div class="cal-arrow">${r._cancelled?'':'›'}</div>`;
-    h+=`</div>`;
+    row+=`<div class="${cls}" ${onclickAttr}>`;
+    row+=`<div class="cal-head-row">`;
+    row+=`<div class="cal-rnd-big">${r._cancelled?'—':'R'+String(r.round).padStart(2,'0')}</div>`;
+    row+=`<div class="font-label text-sm text-outline/70 font-medium" style="white-space:nowrap">${dateStr}</div>`;
+    row+=`<div>`;
+    row+=`<div class="cal-name">${flag}${gpName}${hasSprint&&!r._cancelled?'<span class="cal-badge sprint">Sprint</span>':''}${badge}</div>`;
+    row+=`<div class="cal-loc">${loc}</div>`;
+    row+=`</div>`;
+    row+=`<div class="cal-arrow">${r._cancelled?'':'›'}</div>`;
+    row+=`</div>`;
     // Detail (jen pro nezrušené)
     if(!r._cancelled&&sessions.length){
-      h+=`<div class="cal-detail"><div class="cal-sessions">`;
+      row+=`<div class="cal-detail"><div class="cal-sessions">`;
       sessions.forEach(s=>{
         const dayStr=fmtDay(s.date);
         const timeStr=s.time?fmtTime(s.date+'T'+s.time):'';
-        h+=`<div class="cal-session${s.isRace?' race':''}">`;
-        h+=`<div class="s-label">${s.label}</div>`;
-        h+=`<div class="s-time">${timeStr||'--:--'}</div>`;
-        h+=`<div class="s-day">${dayStr} · ${fmtDate(s.date)}</div>`;
-        h+=`</div>`;
+        row+=`<div class="cal-session${s.isRace?' race':''}">`;
+        row+=`<div class="s-label">${s.label}</div>`;
+        row+=`<div class="s-time">${timeStr||'--:--'}</div>`;
+        row+=`<div class="s-day">${dayStr} · ${fmtDate(s.date)}</div>`;
+        row+=`</div>`;
       });
-      h+=`</div></div>`;
+      row+=`</div></div>`;
     }
-    h+=`</div>`;
+    row+=`</div>`;
+    if(isPastLike){pastH+=row;pastCount++;}else{h+=row;}
   });
+  // Proběhlé závody schované pod rozbalovacím řádkem
+  if(pastCount){
+    h=`<div id="calPastToggle" class="cal-past-toggle${_calShowPast?' open':''}" onclick="toggleCalPast()">`
+      +`<span class="cal-past-arrow">›</span><span>Proběhlé závody</span><span class="cal-past-count">${pastCount}</span></div>`
+      +`<div id="calPastWrap" style="display:${_calShowPast?'block':'none'}">${pastH}</div>`+h;
+  }
   listEl.innerHTML=h;
 }
 
@@ -1619,7 +1680,7 @@ const DRIVER_NUMBERS={
 async function loadTeams(){
   _teamsLoaded=true;
   // Pokud nejsou cached, načti nejdřív standings
-  if(!_stCache[2026])await fetchStYear(2026);
+  await ensureStYear(2026);
   renderTeams();
 }
 
@@ -1951,19 +2012,14 @@ const _resFetching={};
 
 // Cache: 2025 je kompletní sezóna (localStorage natrvalo), 2026 průběžná (sessionStorage, 10 min)
 function hydrateResCache(){
-  try{
-    const p=JSON.parse(localStorage.getItem('ls_res_2025_v1')||'null');
-    if(p?.races?.length)_resCache[2025]=p.races;
-    const c=JSON.parse(sessionStorage.getItem('ls_res_2026_v1')||'null');
-    if(c?.races&&Date.now()-c.t<10*60*1000)_resCache[2026]=c.races;
-  }catch(e){}
+  [2025,2026].forEach(yr=>{
+    const v=cacheRead('ls_res_'+yr+'_v1',yr);
+    if(v&&v.length)_resCache[yr]=v;
+  });
 }
 hydrateResCache();
 function persistResCache(yr){
-  try{
-    const payload=JSON.stringify({t:Date.now(),races:_resCache[yr]});
-    (yr===2025?localStorage:sessionStorage).setItem('ls_res_'+yr+'_v1',payload);
-  }catch(e){}
+  if(_resCache[yr])cacheWrite('ls_res_'+yr+'_v1',yr,_resCache[yr]);
 }
 function ensureResultsYear(yr){
   if(_resCache[yr])return Promise.resolve(_resCache[yr]);
@@ -1981,42 +2037,39 @@ async function loadResults(){
     .then(()=>{if(_resYear===second)renderResults();});
 }
 
-async function fetchResultsYear(yr){
-  let allRaces=[];
-  let offset=0;
+// Stránkování: první dotaz zjistí celkový počet, zbytek stránek jde naráz
+async function fetchPages(url){
   const pageSize=100;
-  let hasMore=true;
-  while(hasMore){
-    const data=await fetchJSON(`${API}/${yr}/results.json?limit=${pageSize}&offset=${offset}`);
-    if(!data||!data.MRData)break;
-    const races=data.MRData.RaceTable?.Races||[];
-    if(!races.length)break;
-    races.forEach(race=>{
-      const existing=allRaces.find(r=>r.round===race.round);
-      if(existing)existing.Results=existing.Results.concat(race.Results||[]);
+  const first=await fetchJSON(`${url}?limit=${pageSize}&offset=0`);
+  if(!first||!first.MRData)return[];
+  const total=parseInt(first.MRData.total)||0;
+  const offsets=[];
+  for(let off=pageSize;off<total;off+=pageSize)offsets.push(off);
+  if(!offsets.length)return[first];
+  const rest=await Promise.all(offsets.map(off=>fetchJSON(`${url}?limit=${pageSize}&offset=${off}`)));
+  return [first,...rest];
+}
+
+async function fetchResultsYear(yr){
+  // Závody i sprinty souběžně
+  const [resPages,sprPages]=await Promise.all([
+    fetchPages(`${API}/${yr}/results.json`),
+    fetchPages(`${API}/${yr}/sprint.json`)
+  ]);
+  const allRaces=[];
+  resPages.forEach(d=>{
+    (d?.MRData?.RaceTable?.Races||[]).forEach(race=>{
+      const ex=allRaces.find(r=>r.round===race.round);
+      if(ex)ex.Results=(ex.Results||[]).concat(race.Results||[]);
       else allRaces.push(race);
     });
-    const total=parseInt(data.MRData.total)||0;
-    offset+=pageSize;
-    hasMore=offset<total;
-  }
-  // Fetch sprint results for rounds that had sprints
-  offset=0;hasMore=true;
-  while(hasMore){
-    const data=await fetchJSON(`${API}/${yr}/sprint.json?limit=${pageSize}&offset=${offset}`);
-    if(!data||!data.MRData)break;
-    const races=data.MRData.RaceTable?.Races||[];
-    if(!races.length)break;
-    races.forEach(race=>{
-      const existing=allRaces.find(r=>r.round===race.round);
-      if(existing){
-        existing.SprintResults=(existing.SprintResults||[]).concat(race.SprintResults||[]);
-      }
+  });
+  sprPages.forEach(d=>{
+    (d?.MRData?.RaceTable?.Races||[]).forEach(race=>{
+      const ex=allRaces.find(r=>r.round===race.round);
+      if(ex)ex.SprintResults=(ex.SprintResults||[]).concat(race.SprintResults||[]);
     });
-    const total=parseInt(data.MRData.total)||0;
-    offset+=pageSize;
-    hasMore=offset<total;
-  }
+  });
   _resCache[yr]=allRaces;
 }
 
@@ -2289,8 +2342,7 @@ let _h2hLoaded=false;
 
 async function loadH2H(){
   _h2hLoaded=true;
-  if(!_stCache[2025])await fetchStYear(2025);
-  if(!_stCache[2026])await fetchStYear(2026);
+  await Promise.all([ensureStYear(2026),ensureStYear(2025)]);
   populateH2HSelect('A');
   populateH2HSelect('B');
   renderH2H();
@@ -2419,6 +2471,9 @@ function renderH2H(){
 (async function init(){
   await loadNextRace();
   await loadLeaders();
+  // Výsledky se používají na 3 stránkách (Výsledky, Graf, H2H) — natáhnout je v klidu na pozadí
+  const prefetch=()=>ensureResultsYear(CUR_YEAR);
+  if(window.requestIdleCallback)requestIdleCallback(prefetch,{timeout:4000});else setTimeout(prefetch,2000);
   // ?demo=1 → ukázka live pohledu s daty z poslední session
   if(new URLSearchParams(location.search).has('demo')){
     const s=await of1('/sessions?session_key=latest');
