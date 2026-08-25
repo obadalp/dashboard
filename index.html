@@ -84,6 +84,17 @@
             background-image: radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
             background-size: 24px 24px;
         }
+        /* Vlajka v hero: ostrá vrstva vždy celá a ve správném poměru (contain),
+           rozmazaná kopie pod ní dokresluje okraje do plné šířky */
+        #heroFlagBlur{background-repeat:no-repeat;background-position:center;background-size:100% 100%;filter:blur(46px) saturate(1.35) contrast(1.05);transform:scale(1.15)}
+        #heroFlag{background-repeat:no-repeat;background-position:center;background-size:contain;filter:contrast(1.05) saturate(1.1);
+            -webkit-mask-image:radial-gradient(ellipse 80% 90% at 50% 50%,#000 58%,transparent 100%);
+            mask-image:radial-gradient(ellipse 80% 90% at 50% 50%,#000 58%,transparent 100%)}
+        @media(max-width:1023px){
+            /* Na úzké obrazovce by ostrá vrstva tvořila viditelný obdélník — stačí barevný podklad */
+            #heroFlag{display:none}
+            #heroFlagBlur{opacity:0.5;filter:blur(34px) saturate(1.35) contrast(1.05)}
+        }
         .glass-panel {
             background: rgba(51, 53, 55, 0.6);
             backdrop-filter: blur(20px);
@@ -348,7 +359,9 @@
 <!-- Hero Section: Data HUD -->
 <section id="heroSection" class="relative w-full overflow-hidden flex items-center bg-surface-container-lowest py-12 md:py-16" style="min-height:min(640px,calc(100vh - 80px))">
 <!-- National Flag Background (dynamically set) -->
-<div id="heroFlag" class="absolute inset-0 z-0 pointer-events-none bg-center bg-cover opacity-[0.5]" style="filter:contrast(1.05) saturate(1.1)"></div>
+<!-- Vlajka: rozmazaná vrstva dokresluje okraje, ostrá drží správný poměr stran -->
+<div id="heroFlagBlur" class="absolute inset-0 z-0 pointer-events-none opacity-[0.45]"></div>
+<div id="heroFlag" class="absolute inset-0 z-0 pointer-events-none opacity-[0.45]"></div>
 <div class="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-background/5 z-[1]"></div>
 <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-[1]"></div>
 <div class="absolute inset-0 bg-grid-pattern opacity-20 z-[2]"></div>
@@ -830,6 +843,7 @@ async function loadNextRace(){
     if(iso){
       const flagBgUrl=`https://flagcdn.com/w1280/${iso}.png`;
       document.getElementById('heroFlag').style.backgroundImage=`url('${flagBgUrl}')`;
+      document.getElementById('heroFlagBlur').style.backgroundImage=`url('${flagBgUrl}')`;
       // Hero flag badge (small flag next to DALŠÍ ZÁVOD)
       const badge=document.getElementById('heroFlagBadge');
       const img=document.getElementById('heroFlagImg');
