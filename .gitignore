@@ -1,0 +1,5 @@
+# Lokální náhledový server (Claude Code) — není součástí webu
+.claude/
+
+# macOS
+.DS_Store
