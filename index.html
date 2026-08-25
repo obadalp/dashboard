@@ -87,7 +87,12 @@
         /* Vlajka v hero: přes celou šířku v původním poměru 3:2 — bez deformace i bez ořezu.
            Hero má stejný poměr, takže ji vlajka vyplní přesně od kraje ke kraji. */
         #heroFlag{aspect-ratio:3/2;height:auto;background-repeat:no-repeat;background-position:center;background-size:100% 100%;filter:contrast(1.05) saturate(1.1)}
-        #heroSection{aspect-ratio:3/2}
+        #heroSection{aspect-ratio:3/2;max-height:calc(100vh - 80px)}
+        @media(min-width:768px){
+            /* Celá vlajka na výšku hero — pruhy zůstanou v přesných třetinách,
+               po stranách zbyde tmavé pozadí (vlevo ho překrývá titulek) */
+            #heroFlag{top:50%;left:50%;right:auto;transform:translate(-50%,-50%);height:100%;width:auto}
+        }
         @media(max-width:767px){
             /* Na výšku je hero vyšší než vlajka — spodní hrana se plynule ztratí místo ostrého pruhu */
             #heroFlag{-webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent 100%);mask-image:linear-gradient(to bottom,#000 55%,transparent 100%)}
@@ -160,8 +165,9 @@
         .team-card .t-rank{position:absolute;top:18px;right:24px;font-family:'Space Grotesk',sans-serif;font-size:48px;font-weight:900;color:rgba(255,255,255,0.06);font-style:italic}
         .team-card .t-name{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:900;text-transform:uppercase;letter-spacing:-0.5px;line-height:1;margin-bottom:6px}
         .team-card .t-engine{font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:18px}
-        .team-card .t-drivers{display:flex;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04)}
-        .team-card .t-driver{flex:1;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:800;color:#e2e2e5;display:flex;align-items:center;gap:10px}
+        .team-card .t-drivers{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04)}
+        .team-card .t-driver{flex:1 1 calc(50% - 5px);min-width:0;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:800;color:#e2e2e5;display:flex;align-items:center;gap:10px}
+        .team-card .t-driver-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .team-card .t-driver-num{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;padding:0 8px;background:rgba(255,255,255,0.06);font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:900;color:#e2e2e5;flex-shrink:0}
         .team-card .t-stats{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px}
         .team-card .t-points{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:900;line-height:1}
@@ -1655,7 +1661,7 @@ const DRIVER_NUMBERS={
   'Fernando Alonso':14,'Lance Stroll':18,'Alexander Albon':23,'Carlos Sainz':55,
   'Pierre Gasly':10,'Franco Colapinto':43,'Liam Lawson':30,'Arvid Lindblad':41,
   'Oliver Bearman':87,'Esteban Ocon':31,'Nico Hülkenberg':27,'Gabriel Bortoleto':5,
-  'Valtteri Bottas':77,'Sergio Pérez':11
+  'Valtteri Bottas':77,'Sergio Pérez':11,'Yuki Tsunoda':22
 };
 
 async function loadTeams(){
@@ -1694,7 +1700,7 @@ function renderTeams(){
     c+=`<div class="t-drivers">`;
     drivers.forEach(d=>{
       const num=DRIVER_NUMBERS[d.name]||'';
-      c+=`<div class="t-driver"><span class="t-driver-num">${num}</span>${d.lastName}</div>`;
+      c+=`<div class="t-driver"><span class="t-driver-num">${num}</span><span class="t-driver-name">${d.lastName}</span></div>`;
     });
     c+=`</div></div>`;
     return c;
