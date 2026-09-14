@@ -84,14 +84,13 @@
             background-image: radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
             background-size: 24px 24px;
         }
-        /* Vlajka v hero: přes celou šířku v původním poměru 3:2 — bez deformace i bez ořezu.
-           Hero má stejný poměr, takže ji vlajka vyplní přesně od kraje ke kraji. */
-        #heroFlag{aspect-ratio:3/2;height:auto;background-repeat:no-repeat;background-position:center;background-size:100% 100%;filter:contrast(1.05) saturate(1.1)}
+        /* Vlajka v hero je <img>, aby si prohlížeč vzal poměr stran z každé vlajky sám —
+           ty se totiž zemi od země liší (Nizozemsko 3:2, Ázerbájdžán 2:1, Katar 2.55:1, Monako 1.25:1). */
+        #heroFlag{filter:contrast(1.05) saturate(1.1)}
         #heroSection{aspect-ratio:3/2;max-height:calc(100vh - 80px)}
         @media(min-width:768px){
-            /* Celá vlajka na výšku hero — pruhy zůstanou v přesných třetinách,
-               po stranách zbyde tmavé pozadí (vlevo ho překrývá titulek) */
-            #heroFlag{top:50%;left:50%;right:auto;transform:translate(-50%,-50%);height:100%;width:auto}
+            /* Celá vlajka se vejde do hero, po stranách zbyde tmavé pozadí (vlevo ho překrývá titulek) */
+            #heroFlag{top:0;left:0;transform:none;width:100%;height:100%;object-fit:contain}
         }
         @media(max-width:767px){
             /* Na výšku je hero vyšší než vlajka — spodní hrana se plynule ztratí místo ostrého pruhu */
@@ -355,7 +354,7 @@
 <section id="heroSection" class="relative w-full overflow-hidden flex items-center bg-surface-container-lowest py-12 md:py-16" style="min-height:min(640px,calc(100vh - 80px))">
 <!-- National Flag Background (dynamically set) -->
 <!-- Vlajka země v pozadí (nastavuje se podle dalšího závodu) -->
-<div id="heroFlag" class="absolute top-0 left-0 right-0 z-0 pointer-events-none opacity-[0.55]"></div>
+<img id="heroFlag" src="" alt="" draggable="false" class="absolute top-0 left-0 w-full z-0 pointer-events-none opacity-[0.55]"/>
 <div class="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-background/5 z-[1]"></div>
 <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-[1]"></div>
 <div class="absolute inset-0 bg-grid-pattern opacity-20 z-[2]"></div>
@@ -860,7 +859,7 @@ async function loadNextRace(){
     const iso=COUNTRY_FLAG_ISO[country];
     if(iso){
       const flagBgUrl=`https://flagcdn.com/w1280/${iso}.png`;
-      document.getElementById('heroFlag').style.backgroundImage=`url('${flagBgUrl}')`;
+      document.getElementById('heroFlag').src=flagBgUrl;
       // Hero flag badge (small flag next to DALŠÍ ZÁVOD)
       const badge=document.getElementById('heroFlagBadge');
       const img=document.getElementById('heroFlagImg');
