@@ -96,6 +96,9 @@
             /* Na výšku je hero vyšší než vlajka — spodní hrana se plynule ztratí místo ostrého pruhu */
             #heroFlag{-webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent 100%);mask-image:linear-gradient(to bottom,#000 55%,transparent 100%)}
         }
+        .hero-recap{display:inline-flex;align-items:center;gap:10px;margin-top:28px;padding:11px 18px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);color:#e2e2e5;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;backdrop-filter:blur(8px)}
+        .hero-recap:hover{background:rgba(232,0,45,0.18);border-color:#e8002d}
+        .hero-recap-arrow{color:#e8002d;font-size:18px;font-weight:900;line-height:1}
         .glass-panel {
             background: rgba(51, 53, 55, 0.6);
             backdrop-filter: blur(20px);
@@ -371,16 +374,21 @@
 </h1>
 <div class="flex gap-12 border-l-2 border-outline-variant/30 pl-8">
 <div>
-<p class="font-label text-[10px] uppercase tracking-widest text-outline/60 mb-1">Začátek závodu</p>
+<p class="font-label text-[10px] uppercase tracking-widest text-outline/60 mb-1" id="heroSessionLbl">Začátek závodu</p>
 <p class="font-headline text-2xl font-bold uppercase" id="heroSession">--:--</p>
 </div>
 </div>
+<button id="heroRecapBtn" class="hero-recap" style="display:none" onclick="openRecap()">
+<span class="material-symbols-outlined" style="font-size:18px">leaderboard</span>
+<span id="heroRecapTxt"></span>
+<span class="hero-recap-arrow">›</span>
+</button>
 </div>
 
 <!-- Horizontal Countdown (right of title, vertically centered) -->
 <div class="col-span-12 md:col-span-6 flex md:justify-end">
 <div class="glass-panel border border-outline-variant/15 px-5 py-6 md:px-10 md:py-8 w-full">
-<p class="font-label text-sm uppercase tracking-[0.4em] text-outline mb-6 text-center">Do startu zbývá</p>
+<p class="font-label text-sm uppercase tracking-[0.4em] text-outline mb-6 text-center" id="cdLabel">Do startu zbývá</p>
 <div class="grid grid-cols-4 gap-2 md:gap-4">
 <div class="text-center border-r border-outline-variant/15 pr-2">
 <p class="font-headline text-5xl md:text-6xl lg:text-8xl font-black text-on-surface leading-none" id="cD">00</p>
@@ -408,7 +416,7 @@
 <div class="lv-wrap max-w-[1920px] mx-auto px-3 md:px-6 py-3 md:py-4">
 <div class="lv-topbar">
 <div class="flex items-center gap-3 min-w-0">
-<span class="w-2.5 h-2.5 rounded-full bg-primary-container live-dot flex-shrink-0"></span>
+<span id="lvDot" class="w-2.5 h-2.5 rounded-full bg-primary-container live-dot flex-shrink-0"></span>
 <span class="font-label text-[10px] tracking-[0.25em] uppercase text-primary-container whitespace-nowrap" id="lvBadge">Live</span>
 <h1 class="font-headline text-xl md:text-2xl font-black italic tracking-tighter uppercase leading-none whitespace-nowrap overflow-hidden text-ellipsis" id="lvTitle">Live session</h1>
 <span class="font-label text-[10px] tracking-widest uppercase text-outline/50 whitespace-nowrap" id="lvLap"></span>
@@ -417,6 +425,7 @@
 <span class="font-label text-[10px] uppercase tracking-widest text-outline/40" id="lvClock"></span>
 <button class="stog-btn active" id="lvModeLeader" onclick="setLiveGapMode('leader')">Leader</button>
 <button class="stog-btn" id="lvModeInt" onclick="setLiveGapMode('interval')">Interval</button>
+<button class="stog-btn" id="lvClose" style="display:none" onclick="closeRecap()">✕ Zavřít</button>
 </div>
 </div>
 <div id="lvFlagBanner" style="display:none"></div>
@@ -803,8 +812,14 @@ function cacheWrite(key,year,v){
 // === Countdown ===
 let TGT=null;
 function tick(){
-  if(!TGT)return;
-  const d=TGT-new Date();
+  // Během běžící session odpočítáváme do jejího konce, ne do závodu
+  let tgt=TGT;
+  if(_schedLive){
+    if(Date.now()>=_schedLive.end){_schedLive=null;checkLive();}
+    else tgt=_schedLive.end;
+  }
+  if(!tgt)return;
+  const d=tgt-Date.now();
   if(d<=0){
     document.getElementById('cD').textContent='00';document.getElementById('cH').textContent='00';document.getElementById('cM').textContent='00';document.getElementById('cS').textContent='00';
     // Countdown dosáhl nuly - závod běží nebo skončil, aktualizuj data
@@ -854,7 +869,8 @@ async function loadNextRace(){
     // Start time (local CET)
     const startTime=raceDate.toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'});
     const startDay=raceDate.toLocaleDateString('cs-CZ',{weekday:'long',day:'numeric',month:'long'});
-    document.getElementById('heroSession').textContent=startDay+' · '+startTime+' CET';
+    _heroRaceText=startDay+' · '+startTime+' CET';
+    if(!_heroLive)document.getElementById('heroSession').textContent=_heroRaceText;
     // Country flag background
     const iso=COUNTRY_FLAG_ISO[country];
     if(iso){
@@ -979,40 +995,96 @@ async function loadLeaders(){
 }
 
 // === Detect live session ===
-async function checkLive(){
-  try{
-    const yr=new Date().getFullYear();
-    const r=await fetch(`${OF1}/sessions?year=${yr}`,{mode:'cors'});
-    if(!r.ok)return;
-    let sessions=await r.json();
-    if(!Array.isArray(sessions))return;
-    sessions=sessions.filter(s=>{const mn=(s.meeting_name||'').toLowerCase();return!CANCELLED_MEETINGS.some(c=>mn.includes(c));});
-    const now=new Date();
-    const active=sessions.find(s=>{
-      const start=new Date(s.date_start);
-      const end=s.date_end?new Date(s.date_end):new Date(start.getTime()+3*3600000);
-      return start<=now&&now<=new Date(end.getTime()+1800000);
+// === Detekce běžící session ===
+// Primárně OpenF1 (přesné časy + data pro live pohled). Během živé session ale OpenF1 bez klíče
+// odmítá všechny dotazy (401 → v prohlížeči jen "Failed to fetch"), takže se v tu chvíli řídíme
+// rozvrhem z kalendáře. Délky sessions jsou plánované, ne skutečné.
+let _heroLive=false,_heroRaceText='--:--',_schedLive=null,_recapSession=null;
+const SESS_DEF=[['FirstPractice','Practice 1',60],['SprintQualifying','Sprint Qualifying',45],['SecondPractice','Practice 2',60],['Sprint','Sprint',45],['ThirdPractice','Practice 3',60],['Qualifying','Qualifying',60]];
+function scheduleSessions(){
+  const out=[];
+  (_calRaces||[]).forEach(r=>{
+    SESS_DEF.forEach(([k,name,min])=>{
+      const x=r[k];
+      if(x&&x.date&&x.time){const st=new Date(x.date+'T'+x.time);out.push({name,start:st,end:new Date(st.getTime()+min*60000)});}
     });
-    const heroLabel=document.querySelector('#p-home .font-label.tracking-\\[0\\.3em\\]');
-    const heroDot=document.querySelector('#p-home .w-2.h-2.rounded-full.animate-pulse');
-    const liveBadge=document.getElementById('liveBadge');
-    if(active){
-      if(liveBadge){liveBadge.style.display='block';liveBadge.classList.add('live-glow');}
-      const sType=active.session_name||active.session_type||'Session';
-      document.getElementById('heroSession').textContent='Právě probíhá · '+sType;
-      startLiveView(active);
-      if(heroLabel){heroLabel.textContent='Live · právě probíhá';heroLabel.classList.remove('text-tertiary');heroLabel.classList.add('text-primary-container');}
-      if(heroDot){heroDot.classList.remove('bg-tertiary');heroDot.classList.add('bg-primary-container','live-dot');}
+    if(r.date&&r.time){const st=new Date(r.date+'T'+r.time);out.push({name:'Race',start:st,end:new Date(st.getTime()+120*60000)});}
+  });
+  return out;
+}
+function scheduleLiveNow(now=Date.now()){
+  return scheduleSessions().find(x=>x.start.getTime()<=now&&now<x.end.getTime())||null;
+}
+
+// Přepne hero mezi "další závod" a "právě probíhá"
+function setHeroLive(on,name){
+  _heroLive=on;
+  const heroLabel=document.querySelector('#p-home .font-label.tracking-\\[0\\.3em\\]');
+  const heroDot=document.querySelector('#p-home .w-2.h-2.rounded-full.animate-pulse');
+  const liveBadge=document.getElementById('liveBadge');
+  const setTxt=(id,t)=>{const e=document.getElementById(id);if(e)e.textContent=t;};
+  if(on){
+    if(liveBadge){liveBadge.style.display='block';liveBadge.classList.add('live-glow');}
+    setTxt('heroSessionLbl','Právě probíhá');
+    setTxt('heroSession',SESSION_CZ[name]||name);
+    setTxt('cdLabel','Do konce zbývá');
+    if(heroLabel){heroLabel.textContent='Live';heroLabel.classList.remove('text-tertiary');heroLabel.classList.add('text-primary-container');}
+    if(heroDot){heroDot.classList.remove('bg-tertiary');heroDot.classList.add('bg-primary-container','live-dot');}
+  }else{
+    if(liveBadge&&!_liveDemo){liveBadge.style.display='none';liveBadge.classList.remove('live-glow');}
+    setTxt('heroSessionLbl','Začátek závodu');
+    setTxt('heroSession',_heroRaceText);
+    setTxt('cdLabel','Do startu zbývá');
+    if(heroLabel){heroLabel.textContent='Další závod';heroLabel.classList.remove('text-primary-container');heroLabel.classList.add('text-tertiary');}
+    if(heroDot){heroDot.classList.remove('bg-primary-container','live-dot');heroDot.classList.add('bg-tertiary');}
+  }
+}
+
+// Tlačítko s výsledky poslední skončené session (jen mimo live)
+function updateRecapBtn(){
+  const b=document.getElementById('heroRecapBtn');
+  if(!b)return;
+  const r=_recapSession;
+  const show=!!r&&!_heroLive&&!_liveActive;
+  b.style.display=show?'inline-flex':'none';
+  if(show)document.getElementById('heroRecapTxt').textContent='Výsledky · '+(SESSION_CZ[r.session_name]||r.session_name||'Session');
+}
+function openRecap(){if(_recapSession)startLiveView(_recapSession,true,true);}
+function closeRecap(){stopLiveView();updateRecapBtn();}
+
+async function checkLive(){
+  let sessions=null;
+  try{
+    const r=await fetch(`${OF1}/sessions?year=${CUR_YEAR}`,{mode:'cors'});
+    if(r.ok){const j=await r.json();if(Array.isArray(j))sessions=j;}
+  }catch(e){}
+  try{
+    let active=null,name=null;
+    if(sessions){
+      sessions=sessions.filter(x=>{const mn=(x.meeting_name||'').toLowerCase();return!CANCELLED_MEETINGS.some(c=>mn.includes(c));});
+      const now=Date.now();
+      active=sessions.find(x=>{
+        const start=new Date(x.date_start).getTime();
+        const end=x.date_end?new Date(x.date_end).getTime():start+3*3600000;
+        return start<=now&&now<=end+1800000;
+      })||null;
+      if(active)name=active.session_name||active.session_type||'Session';
+      _schedLive=null;
+      // poslední skončená session z posledních 72 h → výsledky na požádání
+      const ended=sessions.filter(x=>x.date_end&&new Date(x.date_end).getTime()<now)
+        .sort((a,b)=>new Date(b.date_end)-new Date(a.date_end))[0];
+      _recapSession=ended&&now-new Date(ended.date_end).getTime()<72*3600000?ended:null;
     }else{
-      if(!_liveDemo)stopLiveView();
-      if(liveBadge&&!_liveDemo){liveBadge.style.display='none';liveBadge.classList.remove('live-glow');}
-      if(heroLabel&&heroLabel.textContent!=='Další závod'){
-        heroLabel.textContent='Další závod';
-        heroLabel.classList.remove('text-primary-container');
-        heroLabel.classList.add('text-tertiary');
-      }
-      if(heroDot){heroDot.classList.remove('bg-primary-container','live-dot');heroDot.classList.add('bg-tertiary');}
+      // OpenF1 zamčené / nedostupné → rozvrh
+      await ensureCalRaces();
+      const sc=scheduleLiveNow();
+      _schedLive=sc?{name:sc.name,end:sc.end.getTime()}:null;
+      name=sc?sc.name:null;
     }
+    if(active){setHeroLive(true,name);startLiveView(active);}
+    else if(_schedLive){setHeroLive(true,name);}
+    else{if(!_liveDemo)stopLiveView();setHeroLive(false);}
+    updateRecapBtn();
   }catch(e){}
 }
 
@@ -1042,7 +1114,7 @@ function fmtLapTime(s){
   return m+':'+((s-m*60).toFixed(3).padStart(6,'0'));
 }
 
-async function startLiveView(session,demo){
+async function startLiveView(session,demo,recap){
   if(_liveActive)return;
   _liveActive=true;_liveDemo=!!demo;_liveSession=session;
   _liveDrivers={};_liveLaps={};_liveLapsMaxDate=null;_liveFastest={dur:Infinity,drv:null};
@@ -1059,9 +1131,14 @@ async function startLiveView(session,demo){
   const sName=SESSION_CZ[session.session_name]||session.session_name||'Session';
   document.getElementById('lvTitle').innerHTML=sName+' · <span class="text-primary-container">'+(session.location||'').toUpperCase()+'</span>';
   const badge=document.getElementById('lvBadge');
-  badge.textContent=demo?'Demo':'Live';
+  badge.textContent=recap?'Výsledky':demo?'Demo':'Live';
+  badge.style.color=recap?'#9aa0a8':'';
+  const dot=document.getElementById('lvDot');
+  if(dot){dot.classList.toggle('live-dot',!recap);dot.style.background=recap?'#9aa0a8':'';}
+  const cl=document.getElementById('lvClose');
+  if(cl)cl.style.display=demo?'':'none';
   const navBadge=document.getElementById('liveBadge');
-  if(navBadge){navBadge.textContent=demo?'DEMO':'LIVE';navBadge.style.display='block';navBadge.classList.add('live-glow');}
+  if(navBadge&&!recap){navBadge.textContent=demo?'DEMO':'LIVE';navBadge.style.display='block';navBadge.classList.add('live-glow');}
   const drs=await of1(`/drivers?session_key=${session.session_key}`);
   (drs||[]).forEach(d=>{_liveDrivers[d.driver_number]=d;});
   await livePoll();
@@ -1079,8 +1156,10 @@ function stopLiveView(){
   const mainEl=document.querySelector('main');
   if(mainEl)mainEl.style.minHeight='';
   fitLiveHeight();
+  const cl=document.getElementById('lvClose');
+  if(cl)cl.style.display='none';
   const navBadge=document.getElementById('liveBadge');
-  if(navBadge){navBadge.textContent='LIVE';navBadge.style.display='none';navBadge.classList.remove('live-glow');}
+  if(navBadge&&!_heroLive){navBadge.textContent='LIVE';navBadge.style.display='none';navBadge.classList.remove('live-glow');}
 }
 
 function setLiveGapMode(m){
@@ -1162,7 +1241,9 @@ function renderLive(){
   if(fb){banner.style.display='block';banner.style.background=fb.bg;banner.style.color=fb.fg;banner.textContent=fb.txt;}
   else banner.style.display='none';
 
-  document.getElementById('lvClock').textContent='↻ '+new Date().toLocaleTimeString('cs-CZ');
+  document.getElementById('lvClock').textContent=_liveDemo
+    ?(_liveSession.date_end?'Konec '+new Date(_liveSession.date_end).toLocaleString('cs-CZ',{weekday:'short',hour:'2-digit',minute:'2-digit'}):'')
+    :'↻ '+new Date().toLocaleTimeString('cs-CZ');
   const rows=sorted.map(p=>{
     const d=_liveDrivers[p.driver_number]||{};
     const fullName=d.full_name||d.broadcast_name||('#'+p.driver_number);
@@ -1458,22 +1539,28 @@ const CAL_CANCELLED_2026=[
   {keyword:'saudi',raceName:'Saudi Arabian Grand Prix',date:'2026-04-19',Circuit:{Location:{locality:'Jeddah',country:'Saudi Arabia'}}}
 ];
 
+let _calFetching=null;
+function ensureCalRaces(){
+  if(_calRaces)return Promise.resolve(_calRaces);
+  const cached=cacheRead('ls_cal_'+CUR_YEAR+'_v1',CUR_YEAR);
+  if(cached){_calRaces=cached;return Promise.resolve(cached);}
+  if(!_calFetching)_calFetching=fetchJSON(`${API}/${CUR_YEAR}.json`).then(sd=>{
+    _calFetching=null;
+    const races=sd?.MRData?.RaceTable?.Races;
+    if(races){_calRaces=races;cacheWrite('ls_cal_'+CUR_YEAR+'_v1',CUR_YEAR,races);}
+    return _calRaces;
+  });
+  return _calFetching;
+}
+
 async function loadCalendar(){
   _calLoaded=true;
-  const yr=CUR_YEAR;
-  const cached=cacheRead('ls_cal_'+yr+'_v1',yr);
-  if(cached){_calRaces=cached;renderCalendar();return;}
-  const sd=await fetchJSON(`${API}/${yr}.json`);
-  if(!sd||!sd.MRData){
+  const races=await ensureCalRaces();
+  if(!races){
     document.getElementById('calList').innerHTML='<div class="text-center py-16 text-outline/50 font-label text-xs tracking-widest uppercase">Chyba při načítání</div>';
     return;
   }
-  try{
-    const races=sd.MRData.RaceTable.Races;
-    _calRaces=races;
-    cacheWrite('ls_cal_'+yr+'_v1',yr,races);
-    renderCalendar();
-  }catch(e){console.log('Calendar error:',e);}
+  renderCalendar();
 }
 
 const MONTHS_CZ=['led','úno','bře','dub','kvě','čvn','čvc','srp','zář','říj','lis','pro'];
@@ -2463,8 +2550,7 @@ function renderH2H(){
   // ?demo=1 → ukázka live pohledu s daty z poslední session
   if(new URLSearchParams(location.search).has('demo')){
     const s=await of1('/sessions?session_key=latest');
-    if(s&&s[0])startLiveView(s[0],true);
-    return;
+    if(s&&s[0]){startLiveView(s[0],true);return;}
   }
   checkLive();
   setInterval(checkLive,60000);
