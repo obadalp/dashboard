@@ -4,6 +4,10 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>LAPSCOPE · F1 Dashboard 2026</title>
+<link rel="icon" href="favicon.ico" sizes="32x32"/>
+<link rel="icon" href="favicon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+<meta name="theme-color" content="#121416"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@300;400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -122,6 +126,7 @@
         .dp-row .tc{width:20px;height:20px;border-radius:50%;border:2.5px solid;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:9px}
         .dp-num{font-family:'Space Grotesk',sans-serif;font-weight:800;color:rgba(255,255,255,0.35);font-size:11px}
         .dp-dim{color:rgba(255,255,255,0.45);font-size:11px}
+        .dp-sc{display:inline-block;white-space:nowrap;margin-left:6px;padding:1px 6px;font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;background:rgba(245,208,32,0.15);color:#f5d020;border:1px solid rgba(245,208,32,0.35);vertical-align:1px}
         .dp-val{font-family:'Space Grotesk',sans-serif;font-weight:800;font-variant-numeric:tabular-nums;text-align:right}
         /* Výsledky: odkaz na detail */
         .res-actions{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
@@ -335,7 +340,16 @@
         .rc-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0;margin-top:4px}
         #lvFlagBanner{font-family:'Space Grotesk',sans-serif;font-weight:900;text-transform:uppercase;letter-spacing:3px;text-align:center;padding:7px;font-size:13px}
         @media(min-width:1024px){
-          .lv-grid{grid-template-columns:1fr 1fr minmax(280px,0.85fr);grid-template-rows:minmax(0,1fr)}
+          .lv-grid{grid-template-columns:1fr 1fr minmax(260px,0.75fr);grid-template-rows:minmax(0,1fr)}
+        }
+        @media(min-width:1024px) and (max-width:1279px){
+          /* Užší okna: úspornější pevné sloupce, aby zbylo místo na jméno jezdce */
+          .lv-row{grid-template-columns:22px 4px minmax(0,1fr) 40px 64px 76px;gap:6px;padding:3px 8px}
+          .lv-name{font-size:12px}
+          .lv-lap{font-size:10.5px}
+          .lv-gap{font-size:11.5px}
+          .lv-tyre{gap:3px}
+          .lv-tyre .tc{width:20px;height:20px;font-size:9px}
         }
         @media(max-width:1023px){
           .lv-row{min-height:44px}
@@ -446,7 +460,7 @@
 <div class="flex items-center gap-3 min-w-0">
 <span id="lvDot" class="w-2.5 h-2.5 rounded-full bg-primary-container live-dot flex-shrink-0"></span>
 <span class="font-label text-[10px] tracking-[0.25em] uppercase text-primary-container whitespace-nowrap" id="lvBadge">Live</span>
-<h1 class="font-headline text-xl md:text-2xl font-black italic tracking-tighter uppercase leading-none whitespace-nowrap overflow-hidden text-ellipsis" id="lvTitle">Live session</h1>
+<h1 class="font-headline text-xl md:text-2xl font-black italic tracking-tighter uppercase leading-none whitespace-nowrap overflow-hidden text-ellipsis" style="padding-right:.3em" id="lvTitle">Live session</h1>
 <span class="font-label text-[10px] tracking-widest uppercase text-outline/50 whitespace-nowrap" id="lvLap"></span>
 </div>
 <div class="flex items-center gap-3 flex-shrink-0">
@@ -1447,7 +1461,8 @@ function liveTotalLaps(){
 }
 
 function renderLive(){
-  const{pos,ints,stints,rc,wx}=_liveState;
+  const{pos,ints,rc,wx}=_liveState;
+  const{stints}=liveClean();
   // Nejnovější záznam na jezdce
   const latestPos={},latestInt={},latestStint={};
   pos.forEach(p=>{if(!latestPos[p.driver_number]||p.date>latestPos[p.driver_number].date)latestPos[p.driver_number]=p;});
@@ -1537,6 +1552,49 @@ function renderLive(){
   if(_liveSelDrv!=null)renderDriverPanel();
 }
 
+// Když safety car vede celé pole boxovou uličkou ("ALL CARS THROUGH THE PIT LANE"), časomíra zapíše
+// průjezd každého auta jako zastávku a rozdělí mu stint — OpenF1 i Jolpica to tak převezmou, oficiální
+// přehled F1 ne (Baku 2026: Russell 1 zastávka, ne 2). Na takovém kole je skutečná zastávka poznat
+// podle času v boxové uličce: průjezd ~15 s, zastávka o několik sekund víc.
+function liveClean(){
+  const pit=_liveState.pit||[],rc=_liveState.rc||[];
+  const laps=new Set(rc.filter(m=>/THROUGH THE PIT ?LANE/i.test(m.message||'')).map(m=>m.lap_number));
+  if(!laps.size)return{pits:pit,stints:_liveState.stints};
+  const lane=p=>p.lane_duration??p.pit_duration;
+  const minLane={};
+  pit.forEach(p=>{const v=lane(p);if(laps.has(p.lap_number)&&v!=null&&(minLane[p.lap_number]==null||v<minLane[p.lap_number]))minLane[p.lap_number]=v;});
+  const pits=[],fake=new Set();
+  pit.forEach(p=>{const v=lane(p);if(laps.has(p.lap_number)&&v!=null&&v<minLane[p.lap_number]+4)fake.add(p.driver_number+':'+p.lap_number);else pits.push(p);});
+  // Stint rozdělený jen průjezdem (stejná směs) spojit zpátky do jednoho
+  const byDrv={};
+  [..._liveState.stints].sort((a,b)=>a.driver_number-b.driver_number||(a.stint_number||0)-(b.stint_number||0))
+    .forEach(x=>{(byDrv[x.driver_number]=byDrv[x.driver_number]||[]).push({...x});});
+  const stints=[];
+  Object.values(byDrv).forEach(list=>{
+    const merged=[];
+    list.forEach(x=>{
+      const prev=merged[merged.length-1];
+      if(prev&&prev.compound===x.compound&&fake.has(x.driver_number+':'+prev.lap_end))prev.lap_end=x.lap_end;
+      else merged.push(x);
+    });
+    merged.forEach((x,i)=>{x.stint_number=i+1;stints.push(x);});
+  });
+  return{pits,stints};
+}
+
+// Úseky safety caru a VSC podle kol z race control: od "DEPLOYED" po "IN THIS LAP" / "ENDING"
+function scPeriods(){
+  const out=[];let open=null;
+  [..._liveState.rc].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).forEach(m=>{
+    const msg=(m.message||'').toUpperCase(),lap=m.lap_number||0;
+    const vsc=msg.includes('VIRTUAL SAFETY CAR');
+    if(msg.includes('SAFETY CAR DEPLOYED')){if(open)out.push({...open,to:lap});open={type:vsc?'VSC':'SC',from:lap};}
+    else if(open&&(msg.includes('SAFETY CAR IN THIS LAP')||msg.includes('VSC ENDING')||msg.includes('VIRTUAL SAFETY CAR ENDING'))){out.push({...open,to:lap});open=null;}
+  });
+  if(open)out.push({...open,to:Infinity});
+  return out;
+}
+
 // === Panel jezdce: strategie pneumatik, zastávky, nejrychlejší kolo ===
 const TYRE_CZ={S:'Měkké',M:'Střední',H:'Tvrdé',I:'Přechodné',W:'Do deště'};
 function openDriverPanel(num){
@@ -1567,8 +1625,9 @@ function renderDriverPanel(){
   const info=liveDriverInfo(num,off);
   const total=liveTotalLaps();
   const curLap=_liveLaps[num]?.lap_number||total;
-  const stints=_liveState.stints.filter(x=>x.driver_number===num).sort((a,b)=>(a.stint_number||0)-(b.stint_number||0));
-  const pits=(_liveState.pit||[]).filter(x=>x.driver_number===num).sort((a,b)=>(a.lap_number||0)-(b.lap_number||0));
+  const clean=liveClean();
+  const stints=clean.stints.filter(x=>x.driver_number===num).sort((a,b)=>(a.stint_number||0)-(b.stint_number||0));
+  const pits=clean.pits.filter(x=>x.driver_number===num).sort((a,b)=>(a.lap_number||0)-(b.lap_number||0));
   const best=_liveBest[num];
   const loading=_liveSession.session_key?!_liveLoaded:false;
 
@@ -1611,10 +1670,13 @@ function renderDriverPanel(){
 
   if(pits.length){
     h+=`<div class="dp-sec">Zastávky v boxech</div>`;
+    const sc=scPeriods();
     h+=pits.map((x,i)=>{
       const lane=x.lane_duration??x.pit_duration;
+      const under=sc.find(p=>x.lap_number>=p.from&&x.lap_number<=p.to);
+      const tag=under?` <span class="dp-sc">pod ${under.type==='VSC'?'VSC':'safety carem'}</span>`:'';
       return `<div class="dp-row"><span class="dp-num">${i+1}.</span><span class="material-symbols-outlined" style="font-size:16px;color:rgba(255,255,255,0.4)">build</span>
-        <span>Kolo ${x.lap_number??'?'}${x.stop_duration?` <span class="dp-dim">· stání ${x.stop_duration.toFixed(1)} s</span>`:''}</span>
+        <span>Kolo ${x.lap_number??'?'}${tag}${x.stop_duration?` <span class="dp-dim">· stání ${x.stop_duration.toFixed(1)} s</span>`:''}</span>
         <span class="dp-val">${lane!=null?lane.toFixed(1)+' s':'—'}</span></div>`;
     }).join('');
     h+=`<div class="dp-dim" style="font-size:10px;margin-top:4px">Čas = průjezd boxovou uličkou</div>`;
