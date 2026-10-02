@@ -127,6 +127,12 @@
         .dp-num{font-family:'Space Grotesk',sans-serif;font-weight:800;color:rgba(255,255,255,0.35);font-size:11px}
         .dp-dim{color:rgba(255,255,255,0.45);font-size:11px}
         .dp-sc{display:inline-block;white-space:nowrap;margin-left:6px;padding:1px 6px;font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;background:rgba(245,208,32,0.15);color:#f5d020;border:1px solid rgba(245,208,32,0.35);vertical-align:1px}
+        .wk-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+        .wk-row:last-of-type{border-bottom:none}
+        .wk-chips{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+        .wk-chip{min-width:24px;height:20px;padding:0 5px;display:inline-flex;align-items:center;justify-content:center;border:2px solid;border-radius:10px;font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:10px;font-variant-numeric:tabular-nums;color:#e2e2e5}
+        .wk-chip.used{border-style:dashed;color:rgba(255,255,255,0.6)}
+        .wk-warn{color:#f5d020;cursor:help}
         .dp-val{font-family:'Space Grotesk',sans-serif;font-weight:800;font-variant-numeric:tabular-nums;text-align:right}
         /* Výsledky: odkaz na detail */
         .res-actions{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
@@ -1301,7 +1307,7 @@ async function startLiveView(session,demo,recap,official){
   _liveDrivers={};_liveLaps={};_liveLapsMaxDate=null;_liveFastest={dur:Infinity,drv:null};
   _liveState={pos:[],ints:[],stints:[],rc:[],wx:[],pit:[]};
   // U oficiálního výsledku je sloupec odstupu oficiální — přepínač Leader/Interval nedává smysl
-  ['lvModeLeader','lvModeInt'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=official?'none':'';});
+  ['lvModeLeader','lvModeInt'].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display=(official||!_isRaceSession())?'none':'';});
   document.getElementById('lvColA').innerHTML='<div class="text-center py-16 text-outline/50 font-label text-xs tracking-widest uppercase">Načítám…</div>';
   document.getElementById('lvColB').innerHTML='';
   // Během live schovat zbytek Domů i patičku — vše na jednu obrazovku bez scrollu
@@ -1368,8 +1374,10 @@ function fitLiveHeight(){
   if(!w)return;
   if(_liveActive&&window.innerWidth>=1024){
     w.style.height='';
-    const top=w.getBoundingClientRect().top;
+    // Pozice v dokumentu, ne vůči oknu — jinak by výšku zkreslil případný posun stránky
+    const top=w.getBoundingClientRect().top+window.scrollY;
     w.style.height=Math.max(420,window.innerHeight-top)+'px';
+    if(window.scrollY)window.scrollTo(0,0);
   }else{
     w.style.height='';
   }
@@ -1519,6 +1527,10 @@ function renderLive(){
         let v=_liveGapMode==='interval'?iv.interval:iv.gap_to_leader;
         if(v==null)v=_liveGapMode==='interval'?iv.gap_to_leader:iv.interval;
         gap=v==null?'—':(typeof v==='number'?'+'+v.toFixed(3):String(v));
+      }else if(!isRaceLike){
+        // Trénink / kvalifikace: ztráta nejlepšího kola na nejrychlejšího v session
+        const b=_liveBest[num];
+        if(b&&_liveFastest.dur<Infinity){const dlt=b.dur-_liveFastest.dur;gap=dlt<0.0005?'':'+'+dlt.toFixed(3);}
       }else if(lap&&lap.lap_duration){gap=fmtLapTime(lap.lap_duration);}
     }
     return `<div class="lv-row${_liveSelDrv===num?' sel':''}" data-drv="${num}" onclick="openDriverPanel(${num})" title="Strategie pneumatik">
@@ -1580,6 +1592,64 @@ function liveClean(){
     merged.forEach((x,i)=>{x.stint_number=i+1;stints.push(x);});
   });
   return{pits,stints};
+}
+
+// === Pneumatiky za celý víkend ===
+// Časomíra neposílá inventář sad (ten má jen Pirelli), jen jednotlivé jízdy: směs, kola a stáří na začátku.
+// Spolehlivé je, kolik kol kdo na které směsi najel a co nasadil v které session. Údaj "nová sada" je
+// v trénincích nepřesný (u poloviny pole vychází víc nových sad než příděl), proto se počet zbývajících
+// sad nedopočítává — jen se ukáže, kolik nových hlásí časomíra, s varováním, když to přesahuje příděl.
+const _wkTyres={};
+async function ensureWeekendTyres(mk){
+  if(_wkTyres[mk])return;
+  _wkTyres[mk]='loading';
+  const ss=await of1(`/sessions?meeting_key=${mk}`);
+  const st=ss?await of1(`/stints?meeting_key=${mk}`):null;
+  if(ss&&st)_wkTyres[mk]={sessions:ss.sort((a,b)=>(a.date_start||'').localeCompare(b.date_start||'')),stints:st};
+  else delete _wkTyres[mk];
+  if(_liveSelDrv!=null)renderDriverPanel();
+}
+function weekendTyresHtml(num,curLap){
+  const mk=_liveSession&&_liveSession.meeting_key;
+  if(!mk)return'';
+  const head='<div class="dp-sec">Pneumatiky za víkend</div>';
+  const w=_wkTyres[mk];
+  if(!w){ensureWeekendTyres(mk);return head+'<div class="dp-dim">Načítám…</div>';}
+  if(w==='loading')return head+'<div class="dp-dim">Načítám…</div>';
+  const curKey=_liveSession.session_key,curStart=_liveSession.date_start||'';
+  const sprint=w.sessions.some(x=>/sprint/i.test(x.session_name||''));
+  const alloc=sprint?{H:2,M:4,S:6}:{H:2,M:3,S:8};
+  const clean=liveClean().stints;
+  const tot={},fresh={};
+  let runs='';
+  w.sessions.filter(x=>(x.date_start||'')<=curStart).forEach(sess=>{
+    // Právě zobrazená session z očištěných dat (bez falešných stintů z průjezdu boxy)
+    const list=(sess.session_key===curKey?clean:w.stints.filter(x=>x.session_key===sess.session_key))
+      .filter(x=>x.driver_number===num&&x.compound).sort((a,b)=>(a.stint_number||0)-(b.stint_number||0));
+    if(!list.length)return;
+    const chips=list.map(x=>{
+      const c=x.compound.charAt(0).toUpperCase(),from=x.lap_start||1,to=x.lap_end||curLap||from,n=Math.max(1,to-from+1);
+      const age=x.tyre_age_at_start||0,col=TYRE_COLORS[c]||'#888';
+      tot[c]=(tot[c]||0)+n;
+      if(!age)fresh[c]=(fresh[c]||0)+1;
+      return `<span class="wk-chip${age?' used':''}" style="border-color:${col}" title="${TYRE_CZ[c]||x.compound} · ${n} ${kolTxt(n)} · ${age?'ojetá sada ('+age+' '+kolTxt(age)+' předtím)':'nová sada'}">${n}</span>`;
+    }).join('');
+    runs+=`<div class="wk-row"><span class="dp-dim">${SESSION_CZ[sess.session_name]||sess.session_name}</span><span class="wk-chips">${chips}</span></div>`;
+  });
+  if(!runs)return head+'<div class="dp-dim">Bez záznamu.</div>';
+  let h=head;
+  ['H','M','S','I','W'].filter(c=>tot[c]).forEach(c=>{
+    const col=TYRE_COLORS[c]||'#888',f=fresh[c]||0,a=alloc[c];
+    const over=a!=null&&f>a;
+    const sets=a!=null
+      ?`nové sady ${f} z ${a}${over?' <span class="wk-warn" title="Časomíra hlásí víc nových sad, než kolik jich jezdec dostal — některá byla ve skutečnosti nasazená znovu.">⚠</span>':''}`
+      :`nové sady ${f}`;
+    h+=`<div class="dp-row" style="grid-template-columns:22px 1fr auto"><span class="tc" style="border-color:${col}">${c}</span>
+      <span>${TYRE_CZ[c]} <span class="dp-dim">· ${sets}</span></span><span class="dp-val">${tot[c]} ${kolTxt(tot[c])}</span></div>`;
+  });
+  h+=`<div class="dp-sec">Jízdy po sessions</div>`+runs;
+  h+=`<div class="dp-dim" style="font-size:10px;margin-top:8px;line-height:1.5">Číslo = počet kol v jízdě, čárkovaně = ojetá sada. Příděl na víkend: ${alloc.H} tvrdé · ${alloc.M} střední · ${alloc.S} měkkých${sprint?'':', po každém tréninku se 2 sady vrací'}. Údaj o nové sadě je podle časomíry a v trénincích bývá nepřesný.</div>`;
+  return h;
 }
 
 // Úseky safety caru a VSC podle kol z race control: od "DEPLOYED" po "IN THIS LAP" / "ENDING"
@@ -1646,7 +1716,7 @@ function renderDriverPanel(){
     <button class="dp-close" onclick="closeDriverPanel()" aria-label="Zavřít" title="Zavřít (Esc)">✕</button>
   </div>`;
 
-  h+=`<div class="dp-sec" style="margin-top:0">Strategie pneumatik</div>`;
+  h+=`<div class="dp-sec" style="margin-top:0">${_isRaceSession()?'Strategie pneumatik':'Jízdy v session'}</div>`;
   if(!stints.length){
     h+=`<div class="dp-dim">${loading?'Načítám…':'Bez záznamu o pneumatikách.'}</div>`;
   }else{
@@ -1668,7 +1738,8 @@ function renderDriverPanel(){
     }).join('');
   }
 
-  if(pits.length){
+  // V tréninku a kvalifikaci jsou "zastávky" jen pobyty v garáži — ukazovat je nemá smysl
+  if(pits.length&&_isRaceSession()){
     h+=`<div class="dp-sec">Zastávky v boxech</div>`;
     const sc=scPeriods();
     h+=pits.map((x,i)=>{
@@ -1688,6 +1759,7 @@ function renderDriverPanel(){
       <div class="dp-row" style="grid-template-columns:1fr auto"><span>Kolo ${best.lap??'?'}${isFl?' <span style="color:#c084fc">· nejrychlejší v session</span>':''}</span>
       <span class="dp-val" style="${isFl?'color:#c084fc':''}">${fmtLapTime(best.dur)}</span></div>`;
   }
+  h+=weekendTyresHtml(num,curLap);
   el.innerHTML=h;
 }
 
